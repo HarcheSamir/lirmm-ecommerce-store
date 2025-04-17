@@ -5,6 +5,7 @@ import WithAuth from '../hocs/WithAuth'
 import Home from '../pages/Home';
 import DashboardNavigator from './DashboardNavigator';
 import Test from '../pages/Test';
+import NotFoundPage from '../pages/NotFoundPage';
 export default function PublicNavigator() {
   return (
     <div>
@@ -13,6 +14,7 @@ export default function PublicNavigator() {
         <Route path="/test" element={<Test />} />
         <Route path="/" element={<WithAuth><Home /></WithAuth>} />
         <Route path="/" element={<WithAuth><DashboardNavigator /></WithAuth>} />
+        <Route path="*" element={<NotFoundPage />} />
 
       </Routes>
     </div>

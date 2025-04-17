@@ -1,307 +1,351 @@
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    PiPackageDuotone,
-    PiShoppingCartDuotone,
-    PiUserCircleDuotone,
-    PiQuestion,
-    PiCalendarBlank,
-    PiCaretUp,
-    PiCaretDown,
+  PiPackageDuotone,
+  PiShoppingCartDuotone,
+  PiUserCircleDuotone,
+  PiQuestion,
+  PiCalendarBlank,
+  PiCaretUp,
+  PiCaretDown,
+  PiChartBarDuotone
 } from 'react-icons/pi';
-import React, { useState, useEffect } from 'react';
 import { FaDotCircle } from "react-icons/fa";
 import useLayoutStore from '../store/layoutStore';
-import { IoMdClose } from "react-icons/io";
-import ReactDOM from 'react-dom';
 
+// Navigation data structure
 const navigationItems = [
-    {
-        name: 'Products',
-        icon: PiPackageDuotone,
-        children: [
-            { name: 'List', path: '/products' },
-            { name: 'Edit', path: '/products/edit' },
-            { name: 'Create', path: '/products/create' },
-        ],
-    },
-    {
-        name: 'Orders',
-        icon: PiShoppingCartDuotone,
-        children: [
-            { name: 'List', path: '/orders' },
-            { name: 'Edit', path: '/orders/edit' },
-            { name: 'Create', path: '/orders/create' },
-            { name: 'Details', path: '/orders/details' },
-        ],
-    },
-    {
-        name: 'Account',
-        icon: PiUserCircleDuotone,
-        children: [
-            { name: 'Settings', path: '/account/settings' },
-            { name: 'Activity log', path: '/account/activity' },
-            { name: 'Roles & Permissions', path: '/account/roles' },
-            { name: 'Pricing', path: '/account/pricing' },
-        ],
-    },
-    {
-        name: 'Help Center',
-        icon: PiQuestion,
-        path: '/help',
-    },
-    {
-        name: 'Calendar',
-        icon: PiCalendarBlank,
-        path: '/calendar',
-    },
+  {
+    name: 'Analytics',
+    icon: PiChartBarDuotone,
+    path: '/'
+  },
+  {
+    name: 'Products',
+    icon: PiPackageDuotone,
+    basePath: '/products',
+    children: [
+      { name: 'List', path: '/products' },
+      { name: 'Edit', path: '/products/edit' },
+      { name: 'Create', path: '/products/create' },
+    ],
+  },
+  {
+    name: 'Orders',
+    icon: PiShoppingCartDuotone,
+    basePath: '/orders',
+    children: [
+      { name: 'List', path: '/orders' },
+      { name: 'Edit', path: '/orders/edit' },
+      { name: 'Create', path: '/orders/create' },
+      { name: 'Details', path: '/orders/details' },
+    ],
+  },
+  {
+    name: 'Account',
+    icon: PiUserCircleDuotone,
+    basePath: '/account',
+    children: [
+      { name: 'Settings', path: '/account/settings' },
+      { name: 'Activity log', path: '/account/activity' },
+      { name: 'Roles & Permissions', path: '/account/roles' },
+      { name: 'Pricing', path: '/account/pricing' },
+    ],
+  },
+  {
+    name: 'Help Center',
+    icon: PiQuestion,
+    path: '/help',
+  },
+  {
+    name: 'Calendar',
+    icon: PiCalendarBlank,
+    path: '/calendar',
+  },
 ];
 
+// PopupMenu component for miniSidebar mode
 const PopupMenu = ({ children, isOpen, targetRef, onMouseEnter, onMouseLeave }) => {
-    const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
-    React.useEffect(() => {
-        if (isOpen && targetRef.current) {
-            const rect = targetRef.current.getBoundingClientRect();
-            // Basic positioning - might need adjustment based on scroll / complex layouts
-            setPosition({
-                top: rect.top,
-                left: rect.right + 8, // 8px offset (equivalent to ml-2)
-            });
-        }
-    }, [isOpen, targetRef]);
+  useEffect(() => {
+    if (isOpen && targetRef.current) {
+      const rect = targetRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top,
+        left: rect.right + 8,
+      });
+    }
+  }, [isOpen, targetRef]);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return ReactDOM.createPortal(
-        <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-40 py-2"
-            style={{ top: position.top, left: position.left }}
-            onMouseEnter={onMouseEnter} // Pass through handler
-            onMouseLeave={onMouseLeave} // Pass through handler
-        >
-            {children}
-        </div>,
-        document.body
-    );
+  return ReactDOM.createPortal(
+    <div
+      className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-40 py-2"
+      style={{ top: position.top, left: position.left }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </div>,
+    document.body
+  );
 };
 
+// SidebarSubItem component for child menu items
+const SidebarSubItem = ({ item, isActive, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`flex items-center py-1.5 px-2.5 rounded-md cursor-pointer group ${
+      isActive ? 'text-primary font-medium' : 'text-gray-600 hover:text-gray-900'
+    }`}
+  >
+    <span 
+      className={`w-1.5 h-1.5 rounded-full mr-3 ${
+        isActive ? 'bg-primary' : 'bg-gray-400 group-hover:bg-gray-500'
+      }`}
+    />
+    <span className="text-sm">{item.name}</span>
+  </div>
+);
 
-// Updated SidebarItem
-const SidebarItem = ({ item, isActive, isExpanded, onClick, onSubItemClick, activeSubItem, miniSidebar }) => {
-    const hasChildren = item.children && item.children.length > 0;
-    const [showPopup, setShowPopup] = useState(false); // State controls popup visibility
-    const itemRef = React.useRef(null);
-    const hidePopupTimer = React.useRef(null); // Ref to store the timeout ID
+// SidebarItem component for main navigation items
+const SidebarItem = ({ 
+  item, 
+  isActive, 
+  isExpanded, 
+  onClick, 
+  onSubItemClick, 
+  activeSubItemName, 
+  miniSidebar 
+}) => {
+  const hasChildren = item.children?.length > 0;
+  const [showPopup, setShowPopup] = useState(false);
+  const itemRef = useRef(null);
+  const hidePopupTimer = useRef(null);
 
-    // Function to show the popup and clear any pending hide timers
-    const handleMouseEnter = () => {
-        clearTimeout(hidePopupTimer.current); // Clear any pending timer to hide
-        if (miniSidebar && hasChildren) {
-            setShowPopup(true);
-        }
-    };
+  const handleMouseEnter = () => {
+    clearTimeout(hidePopupTimer.current);
+    if (miniSidebar && hasChildren) {
+      setShowPopup(true);
+    }
+  };
 
-    // Function to start a timer to hide the popup
-    const handleMouseLeave = () => {
-        // Set a timer to hide the popup after a short delay (e.g., 150ms)
-        hidePopupTimer.current = setTimeout(() => {
-            setShowPopup(false);
-        }, 150); // Adjust delay as needed
-    };
+  const handleMouseLeave = () => {
+    hidePopupTimer.current = setTimeout(() => {
+      setShowPopup(false);
+    }, 150);
+  };
 
-    // Clean up timer on unmount
-    useEffect(() => {
-        return () => {
-            clearTimeout(hidePopupTimer.current);
-        };
-    }, []);
+  useEffect(() => {
+    return () => clearTimeout(hidePopupTimer.current);
+  }, []);
 
-    return (
-        <div
-            className="relative" // No background color needed here now unless for debugging
-            ref={itemRef}
-            onMouseEnter={handleMouseEnter} // Use unified handler for trigger
-            onMouseLeave={handleMouseLeave} // Use unified handler for trigger
-        >
-            {/* Trigger Item */}
-            <div
-                onClick={() => onClick(item.name)}
-                 // Note: No background set here, apply container relative if needed for positioning ref
-                className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer group ${
-                    (isActive && !hasChildren) || (isActive && hasChildren && !miniSidebar) // Adjusted active state logic for clarity
-                        ? 'bg-blue-100 text-primary font-medium'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    } ${miniSidebar ? 'justify-center' : ''}`}
-            >
-                 <div className={`flex items-center ${miniSidebar ? 'justify-center w-full ' : ''}`}>
-                    <item.icon className={`w-5 h-5 ${miniSidebar ? 'mr-0 w-6 h-6' : 'mr-3'} flex-shrink-0 ${
-                        (isActive && activeSubItem === null) || (isActive && !hasChildren && !miniSidebar) // Refined active icon color logic
-                        ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-700'
-                        }`}
-                    />
-                    {!miniSidebar && <span className="text-sm">{item.name}</span>}
-                </div>
-                {hasChildren && !miniSidebar && (
-                    isExpanded ? <PiCaretUp className="w-4 h-4 text-gray-500" /> : <PiCaretDown className="w-4 h-4 text-gray-500" />
-                )}
-            </div>
-
-            {/* Mini Sidebar Popup */}
-            {miniSidebar && hasChildren && (
-                <PopupMenu
-                    isOpen={showPopup}
-                    targetRef={itemRef}
-                    onMouseEnter={handleMouseEnter} // Keep popup open if mouse enters it
-                    onMouseLeave={handleMouseLeave} // Start hide timer if mouse leaves popup
-                >
-                    <div className="font-medium text-sm px-3 py-2 border-b border-gray-100">{item.name}</div>
-                    <div className="mt-1">
-                        {item.children.map((child) => (
-                            <div
-                                key={child.name}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onSubItemClick(item.name, child.name);
-                                    setShowPopup(false); // Hide popup after click
-                                }}
-                                className={`flex items-center py-1.5 px-3 cursor-pointer hover:bg-gray-100 ${
-                                    activeSubItem === child.name && isActive
-                                    ? 'text-primary font-medium' : 'text-gray-600'
-                                }`}
-                            >
-                                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                                    activeSubItem === child.name && isActive
-                                    ? 'bg-primary' : 'bg-gray-400'
-                                    }`}></span>
-                                <span className="text-sm">{child.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </PopupMenu>
-            )}
-
-            {/* Regular Expanded Sub Items for normal sidebar */}
-            {hasChildren && !miniSidebar && (
-                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                    <div className="overflow-hidden pl-6 space-y-1">
-                        {item.children.map((child) => (
-                            <SidebarSubItem
-                                key={child.name}
-                                item={child}
-                                isActive={activeSubItem === child.name && isActive}
-                                onClick={() => onSubItemClick(item.name, child.name)}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
+  return (
+    <div
+      className="relative"
+      ref={itemRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Main Item */}
+      <div
+        onClick={() => onClick(item.name)}
+        className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer group ${
+          isActive
+            ? 'bg-blue-100 text-primary font-medium'
+            : 'text-gray-700 hover:bg-gray-100'
+        } ${miniSidebar ? 'justify-center' : ''}`}
+      >
+        <div className={`flex items-center ${miniSidebar ? 'justify-center w-full' : ''}`}>
+          <item.icon
+            className={`w-5 h-5 ${miniSidebar ? 'mr-0 w-6 h-6' : 'mr-3'} flex-shrink-0 ${
+              isActive
+                ? 'text-blue-500'
+                : 'text-gray-500 group-hover:text-gray-700'
+            }`}
+          />
+          {!miniSidebar && <span className="text-sm">{item.name}</span>}
         </div>
-    );
-};
+        {hasChildren && !miniSidebar && (
+          isExpanded ? 
+            <PiCaretUp className="w-4 h-4 text-gray-500" /> : 
+            <PiCaretDown className="w-4 h-4 text-gray-500" />
+        )}
+      </div>
 
-const SidebarSubItem = ({ item, isActive, onClick }) => {
-    return (
-        <div
-            onClick={onClick}
-            className={`flex items-center py-1.5 px-2.5 rounded-md cursor-pointer group ${isActive ? 'text-primary font-medium' : 'text-gray-600 hover:text-gray-900'}`}
+      {/* Mini Sidebar Popup */}
+      {miniSidebar && hasChildren && (
+        <PopupMenu
+          isOpen={showPopup}
+          targetRef={itemRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-            <span className={`w-1.5 h-1.5 rounded-full mr-3 ${isActive ? 'bg-primary' : 'bg-gray-400 group-hover:bg-gray-500'}`}></span>
-            <span className="text-sm">{item.name}</span>
+          <div className="font-medium text-sm px-3 py-2 border-b border-gray-100">
+            {item.name}
+          </div>
+          <div className="mt-1">
+            {item.children.map((child) => (
+              <div
+                key={child.name}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSubItemClick(child.path);
+                  setShowPopup(false);
+                }}
+                className={`flex items-center py-1.5 px-3 cursor-pointer hover:bg-gray-100 ${
+                  isActive && activeSubItemName === child.name
+                    ? 'text-primary font-medium' 
+                    : 'text-gray-600'
+                }`}
+              >
+                <span 
+                  className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                    isActive && activeSubItemName === child.name
+                      ? 'bg-primary' 
+                      : 'bg-gray-400'
+                  }`}
+                />
+                <span className="text-sm">{child.name}</span>
+              </div>
+            ))}
+          </div>
+        </PopupMenu>
+      )}
+
+      {/* Expanded Sub Items (regular sidebar mode) */}
+      {hasChildren && !miniSidebar && (
+        <div 
+          className={`grid transition-all duration-300 ease-in-out ${
+            isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          }`}
+        >
+          <div className="overflow-hidden pl-6 space-y-1">
+            {item.children.map((child) => (
+              <SidebarSubItem
+                key={child.name}
+                item={child}
+                isActive={isActive && activeSubItemName === child.name}
+                onClick={() => onSubItemClick(child.path)}
+              />
+            ))}
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
-// --- Main Sidebar Component ---
+// Initialize expanded state for all menu items
+const getDefaultExpandedState = () => {
+  const initialState = {};
+  navigationItems.forEach(item => {
+    initialState[item.name] = item.children?.length > 0;
+  });
+  return initialState;
+};
 
+// Main Sidebar Component
 export default function Sidebar() {
-    // State to track expanded sections
-    const [expanded, setExpanded] = useState({
-        Products: true,
-        Orders: true,
-        Account: true,
-        'Help Center': false,
-    });
-    const { sidebar, switchSidebar, miniSidebar } = useLayoutStore();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { sidebar, miniSidebar } = useLayoutStore();
+  const [expanded, setExpanded] = useState(getDefaultExpandedState);
 
-    const [activeItem, setActiveItem] = useState('Orders'); // Parent name
-    const [activeSubItem, setActiveSubItem] = useState('List'); // Child name
+  // Toggle expansion state for items with children
+  const handleToggleExpand = (itemName) => {
+    const item = navigationItems.find(i => i.name === itemName);
+    if (!item?.children?.length) return;
 
-    const handleToggleExpand = (itemName) => {
-        setExpanded(prev => ({
-            ...prev,
-            [itemName]: !prev[itemName]
-        }));
-    };
+    setExpanded(prev => ({
+      ...prev,
+      [itemName]: !prev[itemName]
+    }));
+  };
 
-    const handleItemClick = (itemName) => {
-        const item = navigationItems.find(i => i.name === itemName);
-        const hasChildren = item?.children && item.children.length > 0;
+  // Click handler for main navigation items
+  const handleItemClick = (itemName) => {
+    const item = navigationItems.find(i => i.name === itemName);
+    const hasChildren = item?.children?.length > 0;
 
-        if (hasChildren) {
-            if (!miniSidebar) {
-                // If in normal mode and item has children, toggle expansion
-                handleToggleExpand(itemName);
-            } else {
-                // In mini mode, clicking a parent item with children does nothing
-                // (since hovering handles showing children)
-            }
-        } else {
-            // If the item has NO children, clicking it sets it as active
-            setActiveItem(itemName);
-            setActiveSubItem(null); // Clear any active sub-item
-            console.log(`Navigating to ${item?.path || '#'}`);
-        }
-    };
+    if (hasChildren) {
+      if (!miniSidebar) {
+        handleToggleExpand(itemName);
+      }
+    } else if (item?.path && pathname !== item.path) {
+      navigate(item.path);
+    }
+  };
 
-    const handleSubItemClick = (parentName, childName) => {
-        // Clicking a sub-item ALWAYS sets the parent and child as active
-        setActiveItem(parentName);
-        setActiveSubItem(childName);
+  // Click handler for sub-items
+  const handleSubItemClick = (childPath) => {
+    if (childPath && pathname !== childPath) {
+      navigate(childPath);
+    }
+  };
 
-        // If the parent wasn't expanded in normal mode, expand it now
-        if (!miniSidebar && !expanded[parentName]) {
-            handleToggleExpand(parentName);
-        }
-
-        const parentItem = navigationItems.find(i => i.name === parentName);
-        const childItem = parentItem?.children.find(c => c.name === childName);
-        console.log(`Navigating to ${childItem?.path || '#'}`);
-    };
-
-    return (
-        <div className={`font-semibold shrink-0 h-screen bg-white border-r overflow-hidden border-gray-200 flex flex-col duration-200 w-0 ${miniSidebar ? 'lg:w-16' : 'lg:w-64'} ${sidebar ? 'w-64 z-50' : 'w-0'}`}>
-            {/* Logo */}
-            <div className={`p-4 pt-5 pb-3 flex items-center mb-4 ${miniSidebar ? 'justify-center' : ''}`}>
-                <div className="bg-primary p-1 rounded-lg">
-                    <FaDotCircle className="text-white text-l" />
-                </div>
-                {!miniSidebar && (
-                    <span className="text-xl ml-2 font-bold text-gray-800">Ec<span className='text-primary'>o</span>m</span>
-                )}
-            </div>
-
-            {/* Navigation */}
-            <nav
-
-                className={`
-          flex-grow ${miniSidebar ? ' ml-2 ' : 'pl-3'}  space-y-1 overflow-y-scroll 
-          scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent
-          hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full
-        `}>
-                {navigationItems.map((item) => (
-                    <SidebarItem
-                        key={item.name}
-                        item={item}
-                        isActive={activeItem === item.name}
-                        isExpanded={!!expanded[item.name]}
-                        onClick={handleItemClick}
-                        onSubItemClick={handleSubItemClick}
-                        activeSubItem={activeItem === item.name ? activeSubItem : null}
-                        miniSidebar={miniSidebar}
-                    />
-                ))}
-            </nav>
-
-            {/* Optional Footer */}
+  return (
+    <div 
+      className={`font-semibold shrink-0 h-screen bg-white border-r overflow-hidden 
+        border-gray-200 flex flex-col duration-200 w-0 
+        ${miniSidebar ? 'lg:w-16' : 'lg:w-64'} 
+        ${sidebar ? 'w-64 z-50' : 'w-0'}`
+      }
+    >
+      {/* Logo */}
+      <div className={`p-4 pt-5 pb-3 flex items-center mb-4 ${miniSidebar ? 'justify-center' : ''}`}>
+        <div className="bg-primary p-1 rounded-lg">
+          <FaDotCircle className="text-white text-l" />
         </div>
-    );
+        {!miniSidebar && (
+          <span className="text-xl ml-2 font-bold text-gray-800">
+            Ec<span className='text-primary'>o</span>m
+          </span>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav
+        className={`
+          flex-grow ${miniSidebar ? 'ml-2' : 'pl-3'} pr-2 space-y-1 overflow-y-auto
+          scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100
+          hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full
+        `}
+      >
+        {navigationItems.map((item) => {
+          const hasChildren = item.children?.length > 0;
+          let isActive = false;
+          let activeSubItemName = null;
+
+          if (hasChildren) {
+            isActive = (item.basePath && pathname.startsWith(item.basePath)) ||
+                      item.children.some(child => child.path === pathname);
+            const activeChild = item.children.find(child => child.path === pathname);
+            if (activeChild) {
+              activeSubItemName = activeChild.name;
+              isActive = true;
+            }
+          } else {
+            isActive = item.path === pathname;
+          }
+
+          return (
+            <SidebarItem
+              key={item.name}
+              item={item}
+              isActive={isActive}
+              activeSubItemName={activeSubItemName}
+              isExpanded={!!expanded[item.name]}
+              onClick={handleItemClick}
+              onSubItemClick={handleSubItemClick}
+              miniSidebar={miniSidebar}
+            />
+          );
+        })}
+      </nav>
+    </div>
+  );
 }
