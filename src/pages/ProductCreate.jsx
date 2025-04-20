@@ -283,7 +283,7 @@ export default function ProductCreate() {
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col '>
 
         {/* SECTION 1: Résumé */}
-        <section id="sec1" ref={sectionOneRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <section id="sec1" ref={sectionOneRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
           <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
             <p className='font-medium text-fblack text-[16px]'>Résumé</p>
             <p className='text-sm font mt-1 text-gray-500'>Modifiez le titre, le SKU et la description de votre produit ici.</p>
@@ -326,10 +326,10 @@ export default function ProductCreate() {
           </div>
         </section>
 
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
 
         {/* SECTION 2: Images */}
-        <section id="sec2" ref={sectionTwoRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <section id="sec2" ref={sectionTwoRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
           <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
             <p className='font-medium text-fblack text-[16px]'>Images</p>
             <p className='text-sm font mt-1 text-gray-500'>Téléversez ici la galerie d'images de votre produit.</p>
@@ -361,10 +361,10 @@ export default function ProductCreate() {
           </div>
         </section>
 
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
 
         {/* SECTION 3: Catégories */}
-        <section id="sec3" ref={sectionThreeRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <section id="sec3" ref={sectionThreeRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
           <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
             <p className='font-medium text-fblack text-[16px]'>Catégories</p>
             <p className='text-sm font mt-1 text-gray-500'>Sélectionnez les catégories pour ce produit.</p>
@@ -405,10 +405,10 @@ export default function ProductCreate() {
           </div>
         </section>
 
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
 
         {/* SECTION 4: Attributs du Produit */}
-        <section id="sec4" ref={sectionFourRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <section id="sec4" ref={sectionFourRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
           <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
             <p className='font-medium text-fblack text-[16px]'>Attributs du Produit</p>
             <p className='text-sm font mt-1 text-gray-500'>Gérez les attributs de vos variantes ici (ex: Taille, Matière). 'Color' est un attribut par défaut.</p>
@@ -435,10 +435,10 @@ export default function ProductCreate() {
           </div>
         </section>
 
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
 
         {/* SECTION 5: Variantes de Produit & Stock */}
-        <section id="sec5" ref={sectionFiveRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <section id="sec5" ref={sectionFiveRef} className='flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
            <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
             <p className='font-medium text-fblack text-[16px]'>Variantes de Produit & Stock</p>
             <p className='text-sm font mt-1 text-gray-500'>Gérez les détails, le prix et le stock de chaque variante de produit.</p>
@@ -548,8 +548,8 @@ export default function ProductCreate() {
         </section>
 
         {/* SECTION 6: SEO */}
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
-        <section id="sec6" ref={sectionSixRef} className='min-h-[200px] flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <section id="sec6" ref={sectionSixRef} className='min-h-[200px] flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
             <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
                 <p className='font-medium text-fblack text-[16px]'>SEO</p>
                 <p className='text-sm font mt-1 text-gray-500'>Gérez les paramètres SEO pour ce produit.</p>
@@ -558,8 +558,8 @@ export default function ProductCreate() {
         </section>
 
         {/* SECTION 7: Autre */}
-        <div className='px-4 py-4'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
-        <section id="sec7" ref={sectionSevenRef} className='min-h-[200px] flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 mb-8'>
+        <div className='px-4 my-12'> <div style={{ height: 0, width: '100%', borderTop: '1px dashed #cccccc', margin: '0', padding: '0 4rem' }} /> </div>
+        <section id="sec7" ref={sectionSevenRef} className='min-h-[200px] flex flex-col lg:flex-row px-4 gap-4 lg:gap-8 '>
             <div className='w-full lg:w-[30%] lg:shrink-0 flex flex-col mb-4 lg:mb-0'>
                 <p className='font-medium text-fblack text-[16px]'>Autre</p>
                 <p className='text-sm font mt-1 text-gray-500'>Autres paramètres ou informations.</p>
