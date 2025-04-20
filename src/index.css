@@ -1,6 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Lexend:wght@100..900&family=Madimi+One&family=Nunito+Sans:wght@200;400;500;600;700;800&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik:ital,wght@0,300..900;1,300..900&family=Sigmar&display=swap');
 @import "tailwindcss";
 @plugin "tailwind-scrollbar";
 
 @theme {
     --color-primary: #1890FF;
- }
+    --color-fblack: #111111;
+    --color-fgray: #484848;
+    --font-inter: "Inter";
+}
+
+#sec1,
+#sec2,
+#sec3,
+#sec4,
+#sec5,
+#sec6,
+#sec7 {
+  scroll-margin-top: 60px; /* Adjust this value to match your sticky navbar's height */
+}
+

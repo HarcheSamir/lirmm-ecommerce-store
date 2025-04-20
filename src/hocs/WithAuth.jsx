@@ -28,7 +28,7 @@ const WithAuth = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    return <Navigate to="/" state={{ from: location.pathname }} replace />
   }
 
   // Render children if authenticated

@@ -34,26 +34,3 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 })
 
-// Book form schema
-export const bookSchema = z.object({
-  title: z
-    .string()
-    .min(1, { message: 'Title is required' })
-    .max(100, { message: 'Title must be 100 characters or less' }),
-  description: z
-    .string()
-    .max(500, { message: 'Description must be 500 characters or less' })
-    .optional()
-    .nullable(),
-  author: z
-    .string()
-    .min(1, { message: 'Author is required' })
-    .max(100, { message: 'Author must be 100 characters or less' }),
-  publishedAt: z
-    .string()
-    .optional()
-    .nullable()
-    .refine(val => !val || !isNaN(Date.parse(val)), {
-      message: 'Invalid date format'
-    })
-})

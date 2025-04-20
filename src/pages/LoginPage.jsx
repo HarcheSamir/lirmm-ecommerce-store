@@ -10,7 +10,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa"
 const LoginPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from || '/'
+  const from = location.state?.from || '/dashboard'
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false) // <-- Added state for remember me
 
@@ -34,8 +34,7 @@ const LoginPage = () => {
 
   const onSubmit = async (data) => {
     setFormError('')
-    // Pass rememberMe state along with form data to the login function
-    const success = await login({ ...data, rememberMe }) // Added rememberMe back here, assuming it was accidentally removed in the prompt
+    const success = await login({ ...data, rememberMe }) 
     if (success) {
       navigate(from, { replace: true })
     }

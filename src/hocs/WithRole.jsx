@@ -8,7 +8,7 @@ const WithRole = ({ children, roles = [] }) => {
   // Check if the user has the required role
   if (!hasRole(roles)) {
     // Redirect to dashboard if user doesn't have required role
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   // Render children if user has the required role

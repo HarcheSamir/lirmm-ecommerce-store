@@ -2,7 +2,7 @@
 import DashboardNavigator from "../navigators/DashboardNavigator"
 import Sidebar from "../layouts/Sidebar"
 import Topbar from "../layouts/Topbar"
-export default function Home() {
+export default function DashboardPage() {
 
     return (
         <div className='h-full min-h-screen overflow-clip flex flex-row relative '>

@@ -4,12 +4,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   PiPackageDuotone,
   PiShoppingCartDuotone,
-  PiUserCircleDuotone,
+  PiUsersDuotone,
   PiQuestion,
   PiCalendarBlank,
   PiCaretUp,
   PiCaretDown,
-  PiChartBarDuotone
+  PiChartBarDuotone,
+  PiStackDuotone
 } from 'react-icons/pi';
 import { FaDotCircle } from "react-icons/fa";
 import useLayoutStore from '../store/layoutStore';
@@ -17,51 +18,59 @@ import useLayoutStore from '../store/layoutStore';
 // Navigation data structure
 const navigationItems = [
   {
-    name: 'Analytics',
+    name: 'Analytique', // or 'Statistiques'
     icon: PiChartBarDuotone,
-    path: '/'
+    path: '/dashboard'
   },
   {
-    name: 'Products',
+    name: 'Produits',
     icon: PiPackageDuotone,
-    basePath: '/products',
+    basePath: '/dashboard/products',
     children: [
-      { name: 'List', path: '/products' },
-      { name: 'Edit', path: '/products/edit' },
-      { name: 'Create', path: '/products/create' },
+      { name: 'Liste', path: '/dashboard/products' },
+      { name: 'Créer', path: '/dashboard/products/create' },
+      { name: 'Stock', path: '/dashboard/products/stock' }, // 'Stock' is commonly used in French too, or 'Inventaire'
+      { name: 'Avis', path: '/dashboard/products/reviews' }, // or 'Évaluations'
+
     ],
   },
   {
-    name: 'Orders',
+    name: 'Catégories',
+    icon: PiStackDuotone,
+    basePath: '/dashboard/categories',
+    children: [
+      { name: 'Liste', path: '/dashboard/categories' },
+      { name: 'Créer', path: '/dashboard/categories/create' },
+    ],
+  },
+  {
+    name: 'Commandes',
     icon: PiShoppingCartDuotone,
-    basePath: '/orders',
+    basePath: '/dashboard/orders',
     children: [
-      { name: 'List', path: '/orders' },
-      { name: 'Edit', path: '/orders/edit' },
-      { name: 'Create', path: '/orders/create' },
-      { name: 'Details', path: '/orders/details' },
+      { name: 'Liste', path: '/dashboard/orders' },
+      { name: 'Créer', path: '/dashboard/orders/create' },
+
     ],
   },
   {
-    name: 'Account',
-    icon: PiUserCircleDuotone,
-    basePath: '/account',
+    name: 'Comptes', // or 'Utilisateurs'
+    icon: PiUsersDuotone,
+    basePath: '/dashboard/accounts',
     children: [
-      { name: 'Settings', path: '/account/settings' },
-      { name: 'Activity log', path: '/account/activity' },
-      { name: 'Roles & Permissions', path: '/account/roles' },
-      { name: 'Pricing', path: '/account/pricing' },
+      { name: 'Rôles et Permissions', path: '/dashboard/accounts' }, // or 'Rôles & Autorisations'
+      { name: 'Créer', path: '/dashboard/accounts/create' },
     ],
   },
   {
-    name: 'Help Center',
+    name: 'Centre d\'aide', // or 'Aide'
     icon: PiQuestion,
-    path: '/help',
+    path: '/dashboard/help',
   },
   {
-    name: 'Calendar',
+    name: 'Calendrier',
     icon: PiCalendarBlank,
-    path: '/calendar',
+    path: '/dashboard/calendar',
   },
 ];
 
@@ -98,28 +107,26 @@ const PopupMenu = ({ children, isOpen, targetRef, onMouseEnter, onMouseLeave }) 
 const SidebarSubItem = ({ item, isActive, onClick }) => (
   <div
     onClick={onClick}
-    className={`flex items-center py-1.5 px-2.5 rounded-md cursor-pointer group ${
-      isActive ? 'text-primary font-medium' : 'text-gray-600 hover:text-gray-900'
-    }`}
-  >
-    <span 
-      className={`w-1.5 h-1.5 rounded-full mr-3 ${
-        isActive ? 'bg-primary' : 'bg-gray-400 group-hover:bg-gray-500'
+    className={`flex items-center py-1.5 px-2.5 rounded-md cursor-pointer group ${isActive ? 'text-primary font-medium' : 'text-gray-600 hover:text-gray-900'
       }`}
+  >
+    <span
+      className={`w-1.5 h-1.5 rounded-full mr-3 ${isActive ? 'bg-primary' : 'bg-gray-400 group-hover:bg-gray-500'
+        }`}
     />
     <span className="text-sm">{item.name}</span>
   </div>
 );
 
 // SidebarItem component for main navigation items
-const SidebarItem = ({ 
-  item, 
-  isActive, 
-  isExpanded, 
-  onClick, 
-  onSubItemClick, 
-  activeSubItemName, 
-  miniSidebar 
+const SidebarItem = ({
+  item,
+  isActive,
+  isExpanded,
+  onClick,
+  onSubItemClick,
+  activeSubItemName,
+  miniSidebar
 }) => {
   const hasChildren = item.children?.length > 0;
   const [showPopup, setShowPopup] = useState(false);
@@ -153,25 +160,23 @@ const SidebarItem = ({
       {/* Main Item */}
       <div
         onClick={() => onClick(item.name)}
-        className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer group ${
-          isActive
-            ? 'bg-blue-100 text-primary font-medium'
-            : 'text-gray-700 hover:bg-gray-100'
-        } ${miniSidebar ? 'justify-center' : ''}`}
+        className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer group ${isActive
+          ? 'bg-blue-100 text-primary font-medium'
+          : 'text-gray-700 hover:bg-gray-100'
+          } ${miniSidebar ? 'justify-center' : ''}`}
       >
         <div className={`flex items-center ${miniSidebar ? 'justify-center w-full' : ''}`}>
           <item.icon
-            className={`w-5 h-5 ${miniSidebar ? 'mr-0 w-6 h-6' : 'mr-3'} flex-shrink-0 ${
-              isActive
-                ? 'text-blue-500'
-                : 'text-gray-500 group-hover:text-gray-700'
-            }`}
+            className={`w-5 h-5 ${miniSidebar ? 'mr-0 w-6 h-6' : 'mr-3'} flex-shrink-0 ${isActive
+              ? 'text-blue-500'
+              : 'text-gray-500 group-hover:text-gray-700'
+              }`}
           />
           {!miniSidebar && <span className="text-sm">{item.name}</span>}
         </div>
         {hasChildren && !miniSidebar && (
-          isExpanded ? 
-            <PiCaretUp className="w-4 h-4 text-gray-500" /> : 
+          isExpanded ?
+            <PiCaretUp className="w-4 h-4 text-gray-500" /> :
             <PiCaretDown className="w-4 h-4 text-gray-500" />
         )}
       </div>
@@ -196,18 +201,16 @@ const SidebarItem = ({
                   onSubItemClick(child.path);
                   setShowPopup(false);
                 }}
-                className={`flex items-center py-1.5 px-3 cursor-pointer hover:bg-gray-100 ${
-                  isActive && activeSubItemName === child.name
-                    ? 'text-primary font-medium' 
-                    : 'text-gray-600'
-                }`}
-              >
-                <span 
-                  className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                    isActive && activeSubItemName === child.name
-                      ? 'bg-primary' 
-                      : 'bg-gray-400'
+                className={`flex items-center py-1.5 px-3 cursor-pointer hover:bg-gray-100 ${isActive && activeSubItemName === child.name
+                  ? 'text-primary font-medium'
+                  : 'text-gray-600'
                   }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mr-2 ${isActive && activeSubItemName === child.name
+                    ? 'bg-primary'
+                    : 'bg-gray-400'
+                    }`}
                 />
                 <span className="text-sm">{child.name}</span>
               </div>
@@ -218,10 +221,9 @@ const SidebarItem = ({
 
       {/* Expanded Sub Items (regular sidebar mode) */}
       {hasChildren && !miniSidebar && (
-        <div 
-          className={`grid transition-all duration-300 ease-in-out ${
-            isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-          }`}
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            }`}
         >
           <div className="overflow-hidden pl-6 space-y-1">
             {item.children.map((child) => (
@@ -288,7 +290,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div 
+    <div
       className={`font-semibold shrink-0 h-screen bg-white border-r overflow-hidden 
         border-gray-200 flex flex-col duration-200 w-0 
         ${miniSidebar ? 'lg:w-16' : 'lg:w-64'} 
@@ -310,9 +312,9 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav
         className={`
-          flex-grow ${miniSidebar ? 'ml-2' : 'pl-3'} pr-2 space-y-1 overflow-y-auto
-          scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100
-          hover:scrollbar-thumb-gray-400 scrollbar-thumb-rounded-full
+          flex-grow ${miniSidebar ? 'ml-2' : 'pl-3'} pr-2 space-y-1 overflow-y-scroll
+          scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent
+          hover:scrollbar-thumb-gray-400 hover:scrollbar-track-transparent scrollbar-thumb-rounded-full
         `}
       >
         {navigationItems.map((item) => {
@@ -322,7 +324,7 @@ export default function Sidebar() {
 
           if (hasChildren) {
             isActive = (item.basePath && pathname.startsWith(item.basePath)) ||
-                      item.children.some(child => child.path === pathname);
+              item.children.some(child => child.path === pathname);
             const activeChild = item.children.find(child => child.path === pathname);
             if (activeChild) {
               activeSubItemName = activeChild.name;
