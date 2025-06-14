@@ -1,21 +1,35 @@
 import React from 'react'
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import LoginPage from '../pages/LoginPage';
-import WithAuth from '../hocs/WithAuth'
-import DashboardPage from '../pages/DashboardPage';
-import DashboardNavigator from './DashboardNavigator';
 import Test from '../pages/Test';
+import Test2 from '../pages/Test2'
+import Test3 from '../pages/Test3'
 import NotFoundPage from '../pages/NotFoundPage';
+import HomePage from '../pages/Home/HomePage'
+import ProductDetailPage from '../pages/ProductDetailPage';
+import CategoryPage from '../pages/CategoryPage';
+import CartPage from '../pages/CartPage'; // <-- IMPORT
+
 export default function PublicNavigator() {
   return (
     <div>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/test" element={<Test />} />
-        <Route path="/dashboard/*" element={<WithAuth><DashboardPage /></WithAuth>} />
-        <Route path="/" element={<WithAuth><DashboardNavigator /></WithAuth>} />
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Core Public Routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/category/:slug" element={<CategoryPage />} />
+        <Route path="/cart" element={<CartPage />} /> {/* <-- ADDED */}
+        <Route path="/checkout" element={<div>Checkout Page</div>} /> {/* <-- ADDED Placeholder */}
 
+
+        {/* Test Routes */}
+        <Route path="/test" element={<Test />} />
+        <Route path="/test2" element={<Test2 />} />
+        <Route path="/test3" element={<Test3 />} />
+
+        {/* 404 Catch-all */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   )

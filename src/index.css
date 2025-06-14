@@ -3,7 +3,7 @@
 @plugin "tailwind-scrollbar";
 
 @theme {
-    --color-primary: #1890FF;
+    --color-primary: #262C32;
     --color-fblack: #111111;
     --color-fgray: #484848;
     --font-inter: "Inter";
@@ -19,3 +19,36 @@
   scroll-margin-top: 60px; /* Adjust this value to match your sticky navbar's height */
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.4s ease-out;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.group:hover .progress-ring__circle {
+  stroke-dashoffset: 0;
+}
+
+.mega-menu {
+  transform: translateY(10px); /* Start slightly lower for a subtle upward slide effect */
+}
+
+.group-hover\:visible {
+  visibility: visible;
+}
+
+.group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.group-hover\:translate-y-0 {
+  transform: translateY(0);
+}
