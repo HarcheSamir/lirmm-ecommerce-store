@@ -92,3 +92,48 @@ export const variantSchema = z.object({
     ),
     attributes: z.record(z.any()).optional(), // Keep attributes flexible for now
 });
+
+export const checkoutSchema = z.object({
+  // Always required
+  email: z.string().email({ message: 'Invalid email address' }),
+  paymentMethod: z.enum(['creditCard', 'cashOnDelivery']),
+
+  // These fields are now ALL optional at the base level.
+  // Their requirement is conditional, defined in the .superRefine below.
+  country: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  address: z.string().optional(),
+  apartment: z.string().optional(),
+  postalCode: z.string().optional(),
+  city: z.string().optional(),
+  cardHolder: z.string().optional(),
+  cardNumber: z.string().optional(),
+  cardExpiry: z.string().optional(),
+  cardCvc: z.string().optional(),
+
+}).superRefine((data, ctx) => {
+  // This logic is triggered by a hidden field in the form that tracks the delivery method.
+  // We need to access the deliveryMethod from outside the form data.
+  // Since we cannot do that directly here, we will handle this in the component.
+  // The schema will only validate based on payment method.
+  // The component will decide which fields to pass for validation.
+
+  // This part remains correct: Validate card details if it's the chosen method.
+  if (data.paymentMethod === 'creditCard') {
+    if (!data.cardHolder || data.cardHolder.trim() === '') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Name on card is required', path: ['cardHolder'] });
+    }
+    if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(data.cardNumber || '')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid card number format', path: ['cardNumber'] });
+    }
+    if (!/^(0[1-9]|1[0-2])\s*\/\s*[0-9]{2}$/.test(data.cardExpiry || '')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid expiry date (MM/YY)', path: ['cardExpiry'] });
+    }
+    if (!/^\d{3,4}$/.test(data.cardCvc || '')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid CVC', path: ['cardCvc'] });
+    }
+  }
+
+  // A different approach is needed for delivery method. Let's adjust the component instead.
+});

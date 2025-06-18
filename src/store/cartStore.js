@@ -11,28 +11,24 @@ export const useCartStore = create((set, get) => ({
     isLoading: false,
     error: null,
 
-    // Toggles the visibility of the cart sidebar
     toggleCart: () => set(state => ({ isCartOpen: !state.isCartOpen })),
     openCart: () => set({ isCartOpen: true }),
 
-    // Fetches the cart from the backend or creates a new one
     initializeCart: async () => {
         const cartId = get().cartId;
         if (!cartId) {
             console.log("No cartId in storage. Cart will be created on first item add.");
-            set({ cart: { items: [] } }); // Set a default empty cart structure
+            set({ cart: { items: [] } });
             return;
         }
 
         set({ isLoading: true });
         try {
-            // The /carts/:cartId route creates a cart if not found, which is perfect.
             const response = await api.get(`/carts/${cartId}`);
             set({ cart: response.data, isLoading: false });
         } catch (error) {
             const message = error.response?.data?.message || 'Failed to fetch cart.';
             console.error("Initialize Cart Error:", error);
-            // If cart not found (e.g., expired in Redis), clear the local cartId
             if (error.response?.status === 404) {
                 localStorage.removeItem(CART_ID_STORAGE_KEY);
                 set({ cart: { items: [] }, cartId: null, error: message, isLoading: false });
@@ -42,28 +38,23 @@ export const useCartStore = create((set, get) => ({
             }
         }
     },
-    
-    // Adds an item to the cart
+
     addItem: async (product, variant, quantity) => {
         set({ isLoading: true });
         let currentCartId = get().cartId;
 
         try {
+            // *** CRITICAL FIX: Add 'attributes' to the payload sent to the backend ***
             const payload = {
                 productId: product.id,
                 variantId: variant.id,
                 quantity,
                 price: variant.price,
                 name: product.name,
-                imageUrl: product.images?.find(img => img.isPrimary)?.imageUrl || product.images?.[0]?.imageUrl
+                imageUrl: product.images?.find(img => img.isPrimary)?.imageUrl || product.images?.[0]?.imageUrl,
+                attributes: variant.attributes, // <-- THIS IS THE NEW, ESSENTIAL LINE
             };
 
-            let response;
-            // If we have a cartId, add to it. If not, POST to create and add simultaneously.
-            const url = currentCartId ? `/carts/${currentCartId}/items` : '/carts/items';
-            
-            // The backend is smart: POST to /:cartId/items creates cart if it doesn't exist.
-            // Let's create the cart first if we don't have an ID, to be explicit.
             if (!currentCartId) {
                 const createCartResponse = await api.post('/carts');
                 currentCartId = createCartResponse.data.id;
@@ -71,11 +62,12 @@ export const useCartStore = create((set, get) => ({
                 localStorage.setItem(CART_ID_STORAGE_KEY, currentCartId);
             }
 
-            response = await api.post(`/carts/${currentCartId}/items`, payload);
+            const response = await api.post(`/carts/${currentCartId}/items`, payload);
 
+            // The backend response now contains the attributes, so this works perfectly.
             set({ cart: response.data, isLoading: false });
             toast.success(`${product.name} added to cart!`);
-            get().openCart(); // Open cart sidebar on successful add
+            get().openCart();
 
         } catch (error) {
             const message = error.response?.data?.message || 'Could not add item to cart.';
@@ -85,7 +77,6 @@ export const useCartStore = create((set, get) => ({
         }
     },
 
-    // Updates an item's quantity in the cart
     updateItemQuantity: async (itemId, quantity) => {
         const cartId = get().cartId;
         if (!cartId || quantity < 1) return;
@@ -102,7 +93,6 @@ export const useCartStore = create((set, get) => ({
         }
     },
 
-    // Removes an item from the cart
     removeItem: async (itemId) => {
         const cartId = get().cartId;
         if (!cartId) return;
@@ -119,4 +109,17 @@ export const useCartStore = create((set, get) => ({
             toast.error(message);
         }
     },
+
+    clearCartOnOrder: () => {
+        const cartId = get().cartId;
+        if (cartId) {
+            api.delete(`/carts/${cartId}`).catch(err => {
+                console.error("Failed to delete cart from server after order:", err);
+            });
+        }
+        localStorage.removeItem(CART_ID_STORAGE_KEY);
+        set({ cart: null, cartId: null });
+        console.log("Cart cleared after successful order.");
+    },
+
 }));

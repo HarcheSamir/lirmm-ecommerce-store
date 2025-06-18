@@ -8,7 +8,8 @@ import NotFoundPage from '../pages/NotFoundPage';
 import HomePage from '../pages/Home/HomePage'
 import ProductDetailPage from '../pages/ProductDetailPage';
 import CategoryPage from '../pages/CategoryPage';
-import CartPage from '../pages/CartPage'; // <-- IMPORT
+import CartPage from '../pages/CartPage';
+import CheckoutPage from '../pages/CheckoutPage'; // <-- IMPORT NEW PAGE
 
 export default function PublicNavigator() {
   return (
@@ -19,9 +20,10 @@ export default function PublicNavigator() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
-        <Route path="/cart" element={<CartPage />} /> {/* <-- ADDED */}
-        <Route path="/checkout" element={<div>Checkout Page</div>} /> {/* <-- ADDED Placeholder */}
-
+        <Route path="/cart" element={<CartPage />} />
+        {/* *** CRITICAL FIX: Use the actual CheckoutPage component *** */}
+        <Route path="/checkout" element={<CheckoutPage />} /> 
+        <Route path="/order-confirmation/:orderId" element={<div>Order Confirmation Page</div>} /> 
 
         {/* Test Routes */}
         <Route path="/test" element={<Test />} />

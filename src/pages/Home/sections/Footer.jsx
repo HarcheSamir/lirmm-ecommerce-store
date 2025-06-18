@@ -111,9 +111,9 @@ export default function Footer() {
                         </div>
 
                         {/* Newsletter */}
-                        <div className="grid-cols-2">
+                        <div className=" col-span-2  ">
                             <h4 className="font-medium mb-6 text-white">Subscribe for our newsletter</h4>
-                            <div className="flex gap-2 mb-4">
+                            <div className="flex lg:flex-row flex-col w-full gap-2 mb-4">
                                 <input
                                     type="email"
                                     placeholder="Your email"
