@@ -84,7 +84,7 @@ export const variantSchema = z.object({
     ),
     stockQuantity: z.preprocess(
         (val) => (val === "" ? undefined : parseInt(String(val), 10)),
-        z.number({ invalid_type_error: 'La quantité doit être un nombre entier' }).int().nonnegative({ message: 'La quantité ne peut pas être négative' })
+        z.number({ invalid_type_error: 'La quantité doit être un nombre entier' }).int().nonnegative({ message: 'La quantité ne peutpas être négative' })
     ),
     lowStockThreshold: z.preprocess(
         (val) => (val === "" ? undefined : parseInt(String(val), 10)),
@@ -97,6 +97,9 @@ export const checkoutSchema = z.object({
   // Always required
   email: z.string().email({ message: 'Invalid email address' }),
   paymentMethod: z.enum(['creditCard', 'cashOnDelivery']),
+
+  // Field for guest's name
+  guestFullName: z.string().min(1, 'Full name is required').optional(),
 
   // These fields are now ALL optional at the base level.
   // Their requirement is conditional, defined in the .superRefine below.
@@ -136,4 +139,15 @@ export const checkoutSchema = z.object({
   }
 
   // A different approach is needed for delivery method. Let's adjust the component instead.
+});
+
+
+export const uiRegisterSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string().min(1, { message: 'Last name is required' }),
+  email: z.string().min(1, { message: 'Email is required' }).email({ message: 'Invalid email format' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  terms: z.boolean().refine(val => val === true, {
+    message: 'You must accept the terms and conditions.',
+  }),
 });

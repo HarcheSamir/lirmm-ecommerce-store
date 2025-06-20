@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useFormWithValidation } from '../hooks/useFormWithValidation';
-import { loginSchema } from '../utils/schemas';
+import { uiRegisterSchema } from '../utils/schemas';
 import { FaGoogle } from 'react-icons/fa';
 
 const FormInput = ({ label, name, type = 'text', register, error, ...props }) => (
@@ -21,25 +21,21 @@ const FormInput = ({ label, name, type = 'text', register, error, ...props }) =>
     </div>
 );
 
-export default function LoginPage() {
+export default function RegisterPage() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const from = location.state?.from || '/';
-    const { login, isAuthenticated, isLoading } = useAuthStore();
-    const { register, handleSubmit, formState: { errors } } = useFormWithValidation(loginSchema);
+    const { register: registerUser, isLoading } = useAuthStore();
+    const { register, handleSubmit, formState: { errors } } = useFormWithValidation(uiRegisterSchema);
     const [formError, setFormError] = useState('');
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate(from, { replace: true });
-        }
-    }, [isAuthenticated, navigate, from]);
 
     const onSubmit = async (data) => {
         setFormError('');
-        const success = await login(data);
-        if (!success) {
-            setFormError('Login failed. Please check your email and password.');
+        const { firstName, lastName, email, password } = data;
+        const name = `${firstName} ${lastName}`;
+        const success = await registerUser({ name, email, password });
+        if (success) {
+            navigate('/login');
+        } else {
+            setFormError('Registration failed. The email might already be in use.');
         }
     };
 
@@ -47,14 +43,14 @@ export default function LoginPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl border border-gray-200/80 shadow-sm">
                 <div>
-                    <p className="text-center text-sm text-gray-500">Home - Log In</p>
+                    <p className="text-center text-sm text-gray-500">Home - Create Account</p>
                     <h2 className="mt-4 text-center text-4xl font-bold text-gray-900">
-                        Welcome Back
+                        Create Account
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="font-medium text-primary hover:text-primary-dark">
-                            Create Account
+                        Already have an account?{' '}
+                        <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
+                            Log In
                         </Link>
                     </p>
                 </div>
@@ -64,16 +60,27 @@ export default function LoginPage() {
                             {formError}
                         </div>
                     )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormInput label="First name" name="firstName" register={register} error={errors.firstName} placeholder="First name" />
+                        <FormInput label="Last name" name="lastName" register={register} error={errors.lastName} placeholder="Last name" />
+                    </div>
                     <FormInput label="Email *" name="email" type="email" register={register} error={errors.email} placeholder="Your email" />
                     <FormInput label="Password *" name="password" type="password" register={register} error={errors.password} placeholder="Your password" />
 
-                    <div className="flex items-center justify-end">
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-primary hover:text-primary-dark">
-                                Forgot your password?
-                            </a>
-                        </div>
+                    <div className="flex items-center">
+                        <input
+                            id="terms"
+                            name="terms"
+                            type="checkbox"
+                            className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                            {...register('terms')}
+                        />
+                        <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                            I have read and agree to our <span className="font-semibold text-gray-800">Terms of Use *</span>
+                        </label>
                     </div>
+                    {errors.terms && <p className="text-xs text-red-500 -mt-4">{errors.terms.message}</p>}
+
 
                     <div>
                         <button
@@ -81,7 +88,7 @@ export default function LoginPage() {
                             disabled={isLoading}
                             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400"
                         >
-                            {isLoading ? 'Logging In...' : 'Log In'}
+                            {isLoading ? 'Creating...' : 'Create Account'}
                         </button>
                     </div>
 
