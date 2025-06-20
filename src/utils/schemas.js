@@ -1,18 +1,19 @@
 // src/utils/schemas.js
 import { z } from 'zod';
 
-// --- Authentication Schemas (Existing) ---
+// --- Authentication Schemas ---
 export const loginSchema = z.object({
   email: z
     .string()
     .min(1, { message: 'Email is required' })
-    .email({ message: 'Invalid email format' }), // Added email validation
+    .email({ message: 'Invalid email format' }),
   password: z
     .string()
     .min(1, { message: 'Password is required' })
     .min(6, { message: 'Password must be at least 6 characters' })
 });
 
+// The schema used by the authStore (no UI concerns like confirmPassword)
 export const registerSchema = z.object({
   name: z
     .string()
@@ -26,34 +27,37 @@ export const registerSchema = z.object({
     .string()
     .min(1, { message: 'Password is required' })
     .min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z
-    .string()
-    .min(1, { message: 'Confirm password is required' })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
 });
 
-// --- New Category Schema ---
+// A new schema specifically for the UI registration form
+export const uiRegisterSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string().min(1, { message: 'Last name is required' }),
+  email: z.string().min(1, { message: 'Email is required' }).email({ message: 'Invalid email format' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  terms: z.boolean().refine(val => val === true, {
+    message: 'You must accept the terms and conditions.',
+  }),
+});
+
+
+// --- Category Schema ---
 export const categorySchema = z.object({
-  // Renamed from 'title' in form to 'name' for API consistency
   name: z
     .string()
     .min(1, { message: 'Le nom de la catégorie est requis' }),
   slug: z
     .string()
-    .optional() // Making slug optional as API might generate it or it can be empty
+    .optional()
     .refine(value => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), {
       message: 'Le slug ne peut contenir que des lettres minuscules, des chiffres et des traits d\'union',
     }),
   description: z
     .string()
     .optional(),
-  // parentId and imageUrl are handled separately, not part of basic form validation here
 });
 
-// --- New Product Schema ---
-// Validates only the core product fields, not variants/images/categories which are complex objects
+// --- Product Schema ---
 export const productSchema = z.object({
   name: z
     .string()
@@ -67,11 +71,9 @@ export const productSchema = z.object({
   description: z
     .string()
     .optional(),
-  // isActive is usually handled by a toggle/checkbox, not typically in schema unless complex logic needed
 });
 
-// --- Variant Schema (Optional - useful if editing variants directly later) ---
-// This isn't directly used by the main product form validation hook, but useful for reference
+// --- Variant Schema ---
 export const variantSchema = z.object({
     sku: z.string().optional().refine(value => !value || !/\s/.test(value), { message: 'Le SKU ne doit pas contenir d\'espaces' }),
     price: z.preprocess(
@@ -90,19 +92,20 @@ export const variantSchema = z.object({
         (val) => (val === "" ? undefined : parseInt(String(val), 10)),
         z.number({ invalid_type_error: 'Le seuil doit être un nombre entier' }).int().nonnegative({ message: 'Le seuil ne peut pas être négatif' }).optional().nullable()
     ),
-    attributes: z.record(z.any()).optional(), // Keep attributes flexible for now
+    attributes: z.record(z.any()).optional(),
 });
 
+// --- Checkout Schema ---
 export const checkoutSchema = z.object({
-  // Always required
-  email: z.string().email({ message: 'Invalid email address' }),
-  paymentMethod: z.enum(['creditCard', 'cashOnDelivery']),
-
-  // Field for guest's name
+  // Contact fields are now mandatory at the component level
+  email: z.string().min(1, 'Email is required').email({ message: 'Invalid email address' }),
+  phone: z.string().min(1, 'Phone number is required'),
+  
+  // Guest-only field, optional at schema level
   guestFullName: z.string().min(1, 'Full name is required').optional(),
-
-  // These fields are now ALL optional at the base level.
-  // Their requirement is conditional, defined in the .superRefine below.
+  
+  // Payment and Shipping fields
+  paymentMethod: z.enum(['creditCard', 'cashOnDelivery']),
   country: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -116,38 +119,24 @@ export const checkoutSchema = z.object({
   cardCvc: z.string().optional(),
 
 }).superRefine((data, ctx) => {
-  // This logic is triggered by a hidden field in the form that tracks the delivery method.
-  // We need to access the deliveryMethod from outside the form data.
-  // Since we cannot do that directly here, we will handle this in the component.
-  // The schema will only validate based on payment method.
-  // The component will decide which fields to pass for validation.
-
-  // This part remains correct: Validate card details if it's the chosen method.
+  // This superRefine handles format validation for fields that are present.
+  
   if (data.paymentMethod === 'creditCard') {
-    if (!data.cardHolder || data.cardHolder.trim() === '') {
+    if (data.cardHolder && data.cardHolder.trim() === '') {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Name on card is required', path: ['cardHolder'] });
     }
-    if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(data.cardNumber || '')) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid card number format', path: ['cardNumber'] });
+    if (data.cardNumber && !/^\d{4} \d{4} \d{4} \d{4}$/.test(data.cardNumber)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid card number format (e.g., 1234 5678 9101 1121)', path: ['cardNumber'] });
     }
-    if (!/^(0[1-9]|1[0-2])\s*\/\s*[0-9]{2}$/.test(data.cardExpiry || '')) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid expiry date (MM/YY)', path: ['cardExpiry'] });
+    if (data.cardExpiry && !/^(0[1-9]|1[0-2])\s*\/\s*([0-9]{2})$/.test(data.cardExpiry)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid expiry date (MM / YY)', path: ['cardExpiry'] });
     }
-    if (!/^\d{3,4}$/.test(data.cardCvc || '')) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid CVC', path: ['cardCvc'] });
+    if (data.cardCvc && !/^\d{3,4}$/.test(data.cardCvc)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid CVC (3 or 4 digits)', path: ['cardCvc'] });
     }
   }
 
-  // A different approach is needed for delivery method. Let's adjust the component instead.
-});
-
-
-export const uiRegisterSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required' }),
-  lastName: z.string().min(1, { message: 'Last name is required' }),
-  email: z.string().min(1, { message: 'Email is required' }).email({ message: 'Invalid email format' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  terms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions.',
-  }),
+  if (data.phone && !/^\+?[0-9\s-]{7,15}$/.test(data.phone)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid phone number format', path: ['phone'] });
+  }
 });

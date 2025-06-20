@@ -11,9 +11,36 @@ export const useCartStore = create((set, get) => ({
     isLoading: false,
     error: null,
 
+    // ... (toggleCart, openCart, initializeCart functions are unchanged)
+
+    // ====================================================================
+    // NEW FUNCTION: To associate the current guest cart with a user ID.
+    // ====================================================================
+    associateCartOnLogin: async (userId) => {
+        const cartId = get().cartId;
+        // Only proceed if there is a guest cartId to associate.
+        if (!cartId || !userId) {
+            return;
+        }
+
+        console.log(`Associating guest cart ${cartId} with user ${userId}`);
+        try {
+            const response = await api.post('/carts/associate', { cartId, userId });
+            // The backend returns the updated cart. We set it in the state.
+            set({ cart: response.data });
+        } catch (error) {
+            console.error("Failed to associate cart with user:", error);
+            // We don't toast an error here as it's a background process.
+            // The cart will simply remain a "guest" cart on the frontend until the next action.
+        }
+    },
+    
+    // ... (rest of the functions are unchanged)
+    
+    // --- Previous code in the file ---
+    // (The full, existing code for all other functions follows here without modification)
     toggleCart: () => set(state => ({ isCartOpen: !state.isCartOpen })),
     openCart: () => set({ isCartOpen: true }),
-
     initializeCart: async () => {
         const cartId = get().cartId;
         if (!cartId) {
@@ -38,13 +65,10 @@ export const useCartStore = create((set, get) => ({
             }
         }
     },
-
     addItem: async (product, variant, quantity) => {
         set({ isLoading: true });
         let currentCartId = get().cartId;
-
         try {
-            // *** CRITICAL FIX: Add 'attributes' to the payload sent to the backend ***
             const payload = {
                 productId: product.id,
                 variantId: variant.id,
@@ -52,7 +76,7 @@ export const useCartStore = create((set, get) => ({
                 price: variant.price,
                 name: product.name,
                 imageUrl: product.images?.find(img => img.isPrimary)?.imageUrl || product.images?.[0]?.imageUrl,
-                attributes: variant.attributes, // <-- THIS IS THE NEW, ESSENTIAL LINE
+                attributes: variant.attributes,
             };
 
             if (!currentCartId) {
@@ -61,14 +85,10 @@ export const useCartStore = create((set, get) => ({
                 set({ cartId: currentCartId });
                 localStorage.setItem(CART_ID_STORAGE_KEY, currentCartId);
             }
-
             const response = await api.post(`/carts/${currentCartId}/items`, payload);
-
-            // The backend response now contains the attributes, so this works perfectly.
             set({ cart: response.data, isLoading: false });
             toast.success(`${product.name} added to cart!`);
             get().openCart();
-
         } catch (error) {
             const message = error.response?.data?.message || 'Could not add item to cart.';
             console.error("Add Item to Cart Error:", error);
@@ -76,11 +96,9 @@ export const useCartStore = create((set, get) => ({
             toast.error(message);
         }
     },
-
     updateItemQuantity: async (itemId, quantity) => {
         const cartId = get().cartId;
         if (!cartId || quantity < 1) return;
-
         set({ isLoading: true });
         try {
             const response = await api.put(`/carts/${cartId}/items/${itemId}`, { quantity });
@@ -92,11 +110,9 @@ export const useCartStore = create((set, get) => ({
             toast.error(message);
         }
     },
-
     removeItem: async (itemId) => {
         const cartId = get().cartId;
         if (!cartId) return;
-
         set({ isLoading: true });
         try {
             const response = await api.delete(`/carts/${cartId}/items/${itemId}`);
@@ -109,7 +125,6 @@ export const useCartStore = create((set, get) => ({
             toast.error(message);
         }
     },
-
     clearCartOnOrder: () => {
         const cartId = get().cartId;
         if (cartId) {

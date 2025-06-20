@@ -33,7 +33,8 @@ export default function RegisterPage() {
         const name = `${firstName} ${lastName}`;
         const success = await registerUser({ name, email, password });
         if (success) {
-            navigate('/login');
+            // User is now logged in, navigate to the homepage.
+            navigate('/');
         } else {
             setFormError('Registration failed. The email might already be in use.');
         }
