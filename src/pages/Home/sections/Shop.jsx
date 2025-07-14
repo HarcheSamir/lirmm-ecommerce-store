@@ -5,12 +5,12 @@ import { Link } from "react-router-dom"
 import { useProductStore } from "../../../store/productStore"
 import { useCategoryStore } from "../../../store/categoryStore"
 import { FiChevronLeft, FiChevronRight, FiStar } from "react-icons/fi"
-import ProductCard from "../../../components/ProductCard" // <-- CORRECT: IMPORT UNIVERSAL COMPONENT
-import ProductCardSkeleton from "../../../components/ProductCardSkeleton" // <-- CORRECT: IMPORT UNIVERSAL COMPONENT
+import ProductCard from "../../../components/ProductCard"
+import ProductCardSkeleton from "../../../components/ProductCardSkeleton"
 
 const CategoryCard = ({ category, icon, index }) => (
     <Link
-        to={`/category/${category.slug}`}
+        to={`/shop/${category.slug}`}
         className="flex flex-col items-center flex-shrink-0 w-20 text-center group transform-gpu"
         style={{ animationDelay: `${index * 100}ms` }}
     >
@@ -100,7 +100,7 @@ export default function Shop() {
                         <div className="w-16 group-hover:w-[150%] transition-all duration-700 ease-out h-1 bg-primary rounded-full"></div>
                     </div>
                     <Link
-                        to="/category/all"
+                        to="/shop"
                         className="text-sm font-medium text-primary hover:text-primary-dark transition-colors duration-300 flex items-center gap-1 group"
                     >
                         See All Products

@@ -6,7 +6,6 @@ export default function MegaMenu({ parentCategory, isOpen, anchorRect, headerRec
         return null;
     }
 
-    // Calculate position relative to the header, not the viewport
     const top = anchorRect.bottom - headerRect.top;
     const left = anchorRect.left - headerRect.left;
 
@@ -22,7 +21,7 @@ export default function MegaMenu({ parentCategory, isOpen, anchorRect, headerRec
                     {parentCategory.children.map(child => (
                         <li key={child.id}>
                             <Link
-                                to={`/category/${child.slug}`}
+                                to={`/shop/${child.slug}`}
                                 className="flex items-center justify-between p-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 hover:text-primary group/link"
                             >
                                 <span>{child.name}</span>

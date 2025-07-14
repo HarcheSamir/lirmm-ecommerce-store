@@ -65,25 +65,21 @@ export default function ProductDetailPage() {
         }
     }, [product, variantOptions]);
 
-    // *** THIS IS THE CORRECTED AND ERROR-PROOF useEffect HOOK ***
     useEffect(() => {
-        // **CRITICAL FIX**: Add a guard clause. Do not execute this logic if `product` is null.
         if (!product) {
             return;
         }
 
         const optionKeys = Object.keys(variantOptions);
-        
-        // If product has no variants with selectable attributes, select the first one.
+
         if (optionKeys.length === 0 && product.variants?.length > 0) {
             setSelectedVariant(product.variants[0]);
             return;
         }
-        
+
         const allOptionsSelected = optionKeys.every(key => userSelections[key]);
 
         if (allOptionsSelected) {
-            // Safe to access product.variants because of the guard clause above.
             const foundVariant = product.variants.find(variant =>
                 optionKeys.every(key => variant.attributes[key] === userSelections[key])
             );
@@ -105,7 +101,7 @@ export default function ProductDetailPage() {
     };
 
     const getColorHex = (attributeKey, attributeValue) => {
-        if (!product || !product.variants) return null; // Safety check
+        if (!product || !product.variants) return null;
         const variantWithColor = product.variants.find(v =>
             v.attributes && v.attributes[attributeKey] === attributeValue && v.attributes.colorHex
         );
@@ -120,8 +116,6 @@ export default function ProductDetailPage() {
         return <div className="flex items-center justify-center h-screen text-xl text-red-500">Error: {error}</div>;
     }
     if (!product) {
-        // This state is briefly visible between loading and product being set. It is normal.
-        // It can also mean product not found after loading.
         return <div className="flex items-center justify-center h-screen text-xl">Product not found.</div>;
     }
 
@@ -130,9 +124,8 @@ export default function ProductDetailPage() {
             <DetailNavbar />
             <main className="py-10">
                 <div className="max-w-6xl mx-auto px-4">
-                    <p className="text-sm text-gray-500 mb-6"><Link to="/" className="hover:underline">Home</Link> / <Link to={`/category/${product.categories?.[0]?.category.slug || 'all'}`} className="hover:underline">{product.categories?.[0]?.category.name || 'Category'}</Link> / {product.name}</p>
+                    <p className="text-sm text-gray-500 mb-6"><Link to="/" className="hover:underline">Home</Link> / <Link to={`/shop/${product.categories?.[0]?.category.slug || 'all'}`} className="hover:underline">{product.categories?.[0]?.category.name || 'Category'}</Link> / {product.name}</p>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        {/* Image Gallery */}
                         <div className="flex flex-col-reverse sm:flex-row gap-4">
                             <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0">
                                 {product.images?.map(image => (
@@ -145,7 +138,6 @@ export default function ProductDetailPage() {
                                 <img src={activeImage?.imageUrl} alt={product.name} className="w-full h-full object-cover"/>
                             </div>
                         </div>
-                        {/* Product Details */}
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
                             <div className="my-3 text-lg">
@@ -213,11 +205,10 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
                 </div>
-                {/* You may also like */}
                 <div className="max-w-6xl mx-auto px-4 mt-20">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">You may also like</h2>
-                        <Link to="/category/all" className="text-sm font-semibold text-primary hover:underline">View All</Link>
+                        <Link to="/shop" className="text-sm font-semibold text-primary hover:underline">View All</Link>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {relatedProducts.filter(p => p.id !== product.id).slice(0, 4).map(p => (
