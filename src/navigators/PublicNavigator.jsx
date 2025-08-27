@@ -11,6 +11,10 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import ShopPage from '../pages/ShopPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
+// --- START: SURGICAL ADDITION ---
+import TrackOrderPage from '../pages/TrackOrder/TrackOrderPage';
+import MyOrdersPage from '../pages/Account/MyOrdersPage';
+// --- END: SURGICAL ADDITION ---
 
 export default function PublicNavigator() {
   return (
@@ -27,6 +31,11 @@ export default function PublicNavigator() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-confirmation/:orderId" element={<div>Order Confirmation Page</div>} />
+
+        {/* --- START: SURGICAL ADDITION --- */}
+        <Route path="/track-order" element={<TrackOrderPage />} />
+        <Route path="/account/orders" element={<MyOrdersPage />} />
+        {/* --- END: SURGICAL ADDITION --- */}
         
         <Route path="/test" element={<Test />} />
         <Route path="/test2" element={<Test2 />} />

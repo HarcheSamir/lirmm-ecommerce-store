@@ -140,3 +140,22 @@ export const checkoutSchema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid phone number format', path: ['phone'] });
   }
 });
+
+export const reviewSchema = z.object({
+  rating: z.number().min(1, { message: 'Rating is required' }).max(5),
+  title: z.string().max(100, { message: 'Title cannot exceed 100 characters' }).optional(),
+  comment: z.string().min(10, { message: 'Comment must be at least 10 characters long' }),
+});
+
+export const trackOrderSchema = z.object({
+  orderId: z.string().min(1, { message: 'Order ID is required.' }),
+  email: z.string().min(1, { message: 'Email is required.' }).email({ message: 'Please enter a valid email address.' }),
+});
+
+export const returnRequestSchema = z.object({
+    reason: z.string().min(10, { message: 'Please provide a reason with at least 10 characters.' }),
+    items: z.array(z.object({
+        orderItemId: z.string(),
+        quantity: z.number().min(1),
+    })).min(1, { message: 'You must select at least one item to return.' })
+});

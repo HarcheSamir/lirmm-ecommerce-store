@@ -1,3 +1,4 @@
+//src/store/authStore
 import { create } from 'zustand';
 import { api } from '../services/api';
 import { toast } from 'react-toastify';
