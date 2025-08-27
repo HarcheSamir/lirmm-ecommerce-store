@@ -4,12 +4,9 @@ import { toast } from 'react-toastify';
 import { useCartStore } from './cartStore';
 
 export const useOrderStore = create((set, get) => ({
-    // --- EXISTING STATE ---
     order: null,
     isLoading: false,
     error: null,
-    
-    // --- NEW STATE FOR ORDER HISTORY ---
     orders: [], 
     pagination: null,
 
@@ -18,13 +15,10 @@ export const useOrderStore = create((set, get) => ({
         try {
             const response = await api.post('/orders', orderData);
             const newOrder = response.data;
-
             set({ order: newOrder, isLoading: false });
             toast.success(`Order #${newOrder.id.slice(0, 8)} placed successfully!`);
-            
             useCartStore.getState().clearCartOnOrder();
-
-            return { success: true, order: newOrder }; // Return the full order object
+            return { success: true, order: newOrder };
         } catch (error) {
             const message = error.response?.data?.message || 'Failed to place order.';
             console.error("Create Order Error:", error);
@@ -34,7 +28,6 @@ export const useOrderStore = create((set, get) => ({
         }
     },
     
-    // --- NEW FUNCTIONS FOR CUSTOMER ACTIONS ---
     fetchMyOrders: async (page = 1, limit = 10) => {
         set({ isLoading: true, error: null });
         try {
@@ -84,16 +77,46 @@ export const useOrderStore = create((set, get) => ({
             const payload = { orderId, reason, items, imageUrls };
             const response = await api.post(url, payload);
             toast.success('Return request submitted successfully.');
-            
-            // Refetch the order to show the updated return status
-            get().fetchGuestOrder(orderId, guestToken);
-            
+            if (guestToken) {
+                await get().fetchGuestOrder(orderId, guestToken);
+            } else {
+                // Future enhancement: fetch authenticated user order by ID
+            }
+            set({ isLoading: false });
             return response.data;
         } catch (error) {
             const message = error.response?.data?.message || 'Failed to create return request.';
             set({ error: message, isLoading: false });
             toast.error(message);
             return null;
+        }
+    },
+
+    createReturnRequestComment: async (returnRequestId, commentText, imageUrl, guestToken) => {
+        try {
+            const url = guestToken
+                ? `/orders/returns/${returnRequestId}/comments?guest_token=${guestToken}`
+                : `/orders/returns/${returnRequestId}/comments`;
+            
+            const response = await api.post(url, { commentText, imageUrl });
+
+            set(state => {
+                if (!state.order || !state.order.returnRequests || state.order.returnRequests.length === 0) {
+                    return state;
+                }
+                const updatedReturnRequests = state.order.returnRequests.map(req => {
+                    if (req.id === returnRequestId) {
+                        return { ...req, comments: [...req.comments, response.data] };
+                    }
+                    return req;
+                });
+                return { order: { ...state.order, returnRequests: updatedReturnRequests } };
+            });
+            return true;
+        } catch (error) {
+            const message = error.response?.data?.message || 'Failed to post comment.';
+            toast.error(message);
+            return false;
         }
     },
 
