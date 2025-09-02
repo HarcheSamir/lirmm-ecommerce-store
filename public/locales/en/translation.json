@@ -77,5 +77,11 @@
   "request_a_return": "Request a Return",
   "invalid_link_title": "Invalid or Missing Link",
   "invalid_link_description": "To view your order details, please use the secure link provided in your order confirmation email. This page cannot be accessed directly.",
-  "back_to_homepage": "Back to homepage"
+  "back_to_homepage": "Back to homepage",
+  "limited_time_offer": "Limited Time Offer",
+  "countdown_days": "Days",
+  "countdown_hours": "Hours",
+  "countdown_mins": "Mins",
+  "countdown_secs": "Secs",
+  "offer_product_alt": "Offer Product"
 }

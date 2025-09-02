@@ -78,5 +78,11 @@
   "request_a_return": "طلب إرجاع",
   "invalid_link_title": "رابط غير صالح أو مفقود",
   "invalid_link_description": "لعرض تفاصيل طلبك، يرجى استخدام الرابط الآمن الموجود في بريد تأكيد الطلب. لا يمكن الوصول إلى هذه الصفحة مباشرة.",
-  "back_to_homepage": "العودة إلى الصفحة الرئيسية"
+  "back_to_homepage": "العودة إلى الصفحة الرئيسية",
+  "limited_time_offer": "عرض لوقت محدود",
+  "countdown_days": "أيام",
+  "countdown_hours": "ساعات",
+  "countdown_mins": "دقائق",
+  "countdown_secs": "ثواني",
+  "offer_product_alt": "منتج العرض"
 }

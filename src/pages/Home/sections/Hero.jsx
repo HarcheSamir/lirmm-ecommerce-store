@@ -1,33 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { usePromotionStore } from '../../../store/promotionStore';
+import { useCountdown } from '../../../hooks/useCountdown'; // Import the fixed hook
 import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
+import { useTranslation } from 'react-i18next';
 
-// --- START: SELF-CONTAINED HOOK & COMPONENTS ---
-
-const useCountdown = (targetDate) => {
-  const calculateTimeLeft = () => {
-    const difference = +new Date(targetDate) - +new Date();
-    let timeLeft = {};
-    if (difference > 0) {
-      timeLeft = {
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-      };
-    } else {
-      timeLeft = { hours: 0, minutes: 0, seconds: 0 };
-    }
-    return timeLeft;
-  };
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-  useEffect(() => {
-    if (!targetDate) return;
-    const timer = setTimeout(() => { setTimeLeft(calculateTimeLeft()); }, 1000);
-    return () => clearTimeout(timer);
-  });
-  return timeLeft;
-};
+// --- START: COMPONENTS ---
 
 const MainBanner = ({ promotions }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -77,6 +55,8 @@ const MainBanner = ({ promotions }) => {
 };
 
 const SideOffer = ({ promotion }) => {
+    const { t } = useTranslation();
+
     if (!promotion) {
         return <div className="w-full h-[50vh] md:h-full rounded-lg bg-gray-200 animate-pulse" />;
     }
@@ -91,23 +71,29 @@ const SideOffer = ({ promotion }) => {
 
     return (
         <div className="relative w-full h-[50vh] md:h-full rounded-lg p-6 flex flex-col items-center overflow-hidden">
-            <img src={promotion.imageUrl} alt={promotion.title} className="absolute inset-0 w-full h-full object-cover -z-10" />
+            <img src={promotion.imageUrl|| '/assets/hero2'} alt={promotion.title} className="absolute inset-0 w-full h-full object-cover z-10 " />
             <div className="text-center mb-4 z-10">
-                <h3 className="text-gray-600 text-sm">{promotion.tagline || 'Limited Time Offer'}</h3>
+                <h3 className="text-gray-600 text-sm">{promotion.tagline || t('limited_time_offer')}</h3>
                 <div className="flex gap-2 justify-center mt-2">
-                    <CountdownUnit value={timeLeft.hours} label="Hours" />
+                    {timeLeft.days > 0 && (
+                        <>
+                            <CountdownUnit value={timeLeft.days} label={t('countdown_days')} />
+                            <div className="text-xl font-bold self-center text-gray-700">:</div>
+                        </>
+                    )}
+                    <CountdownUnit value={timeLeft.hours} label={t('countdown_hours')} />
                     <div className="text-xl font-bold self-center text-gray-700">:</div>
-                    <CountdownUnit value={timeLeft.minutes} label="Mins" />
+                    <CountdownUnit value={timeLeft.minutes} label={t('countdown_mins')} />
                     <div className="text-xl font-bold self-center text-gray-700">:</div>
-                    <CountdownUnit value={timeLeft.seconds} label="Secs" />
+                    <CountdownUnit value={timeLeft.seconds} label={t('countdown_secs')} />
                 </div>
             </div>
             {promotion.productImageUrl &&
                 <div className="relative z-10 my-4 flex-grow flex items-center">
-                    <img src={promotion.productImageUrl} alt="Offer Product" className="max-h-full max-w-full object-contain" />
+                    <img src={promotion.productImageUrl} alt={t('offer_product_alt')} className="max-h-full max-w-full object-contain" />
                 </div>
             }
-            <div className="mt-auto z-10 flex flex-col text-[#7c3b31] items-center text-center">
+            <div className="mt-auto  z-10 flex flex-col text-[#7c3b31] items-center text-center">
                 <h2 className="text-3xl font-bold mb-1">{promotion.title}</h2>
                 <p className="text-sm mb-4">{promotion.subtitle}</p>
                 <Link to={promotion.ctaLink} className="text-gray-700 text-[12px] font-semibold cursor-pointer underline hover:text-black">
@@ -118,7 +104,7 @@ const SideOffer = ({ promotion }) => {
     );
 };
 
-// --- END: SELF-CONTAINED HOOK & COMPONENTS ---
+// --- END: COMPONENTS ---
 
 
 export default function Hero() {

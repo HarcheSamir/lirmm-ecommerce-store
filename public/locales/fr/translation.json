@@ -78,5 +78,11 @@
   "request_a_return": "Demander un retour",
   "invalid_link_title": "Lien invalide ou manquant",
   "invalid_link_description": "Pour voir les détails de votre commande, veuillez utiliser le lien sécurisé fourni dans votre e-mail de confirmation. Cette page n'est pas accessible directement.",
-  "back_to_homepage": "Retour à l'accueil"
+  "back_to_homepage": "Retour à l'accueil",
+  "limited_time_offer": "Offre à durée limitée",
+  "countdown_days": "Jours",
+  "countdown_hours": "Heures",
+  "countdown_mins": "Min",
+  "countdown_secs": "Sec",
+  "offer_product_alt": "Produit en offre"
 }
