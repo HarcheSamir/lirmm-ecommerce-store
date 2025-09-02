@@ -3,10 +3,12 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import debounce from 'lodash.debounce';
 import { useSearchStore } from '../store/searchStore';
+import { useTranslation } from 'react-i18next';
 import { FiSearch, FiLoader } from 'react-icons/fi';
 
 export default function SearchWithSuggestions() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const {
         suggestions,
         isSuggestionsLoading,
@@ -40,7 +42,6 @@ export default function SearchWithSuggestions() {
     };
 
     const handleSuggestionClick = (e) => {
-        // Don't prevent default - let the Link handle navigation
         setInputValue('');
         clearSuggestions();
         setIsFocused(false);
@@ -57,14 +58,11 @@ export default function SearchWithSuggestions() {
         }
     };
 
-    // Handle blur with proper event handling
     const handleBlur = (e) => {
-        // Check if the new focus target is within the suggestions container
-        if (suggestionContainerRef.current && 
+        if (suggestionContainerRef.current &&
             suggestionContainerRef.current.contains(e.relatedTarget)) {
-            return; // Don't close if clicking on a suggestion
+            return;
         }
-        // Delay closing to allow click events to fire
         setTimeout(() => setIsFocused(false), 150);
     };
 
@@ -75,7 +73,7 @@ export default function SearchWithSuggestions() {
             <form onSubmit={handleSubmit} className="flex">
                 <input
                     type="text"
-                    placeholder="Search for anything"
+                    placeholder={t('search_placeholder')}
                     className="flex-1 px-4 py-2 border border-r-0 border-gray-300 rounded-l-md outline-none text-sm focus:ring-2 focus:ring-primary/50"
                     value={inputValue}
                     onChange={handleChange}
@@ -92,7 +90,7 @@ export default function SearchWithSuggestions() {
             </form>
 
             {showSuggestions && (
-                <div 
+                <div
                     ref={suggestionContainerRef}
                     className="absolute top-full mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200/80 z-50 overflow-hidden"
                 >

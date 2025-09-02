@@ -16,7 +16,7 @@ export default function CategoryPage() {
     }, [slug, fetchProducts]);
 
     return (
-         <div className='min-h-screen'>
+         <div className='min-h-screenF'>
             <HomeNavbar />
             <div className="max-w-6xl mx-auto p-8">
                 <h1 className="text-3xl font-bold capitalize mb-8">Category: {slug.replace(/-/g, ' ')}</h1>

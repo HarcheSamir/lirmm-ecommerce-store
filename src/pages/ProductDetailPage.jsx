@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProductStore } from '../store/productStore';
 import { useCartStore } from '../store/cartStore';
-import DetailNavbar from '../components/DetailNavbar';
+import { useSettings } from '../context/SettingsContext';
+import HomeNavbar from '../components/HomeNavbar';
 import Footer from './Home/sections/Footer';
 import ProductCard from '../components/ProductCard';
 import { FiMinus, FiPlus, FiStar } from 'react-icons/fi';
@@ -14,16 +15,19 @@ export default function ProductDetailPage() {
     const { product, fetchProductById, isLoading: productLoading, error } = useProductStore();
     const { products: relatedProducts, fetchProducts } = useProductStore();
     const { addItem, isLoading: cartLoading } = useCartStore();
+    const { language, currency } = useSettings();
 
     const [quantity, setQuantity] = useState(1);
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [activeImage, setActiveImage] = useState(null);
     const [userSelections, setUserSelections] = useState({});
 
+    const displayProduct = useMemo(() => product?.data, [product]);
+
     const variantOptions = useMemo(() => {
-        if (!product?.variants) return {};
+        if (!displayProduct?.variants) return {};
         const options = {};
-        product.variants.forEach(variant => {
+        displayProduct.variants.forEach(variant => {
             if (!variant.attributes) return;
             Object.entries(variant.attributes).forEach(([key, value]) => {
                 if (key === 'colorHex') return;
@@ -35,7 +39,7 @@ export default function ProductDetailPage() {
             options[key] = Array.from(options[key]);
         });
         return options;
-    }, [product]);
+    }, [displayProduct]);
 
     useEffect(() => {
         if (id) {
@@ -46,8 +50,8 @@ export default function ProductDetailPage() {
     }, [id, fetchProductById, fetchProducts]);
 
     useEffect(() => {
-        if (product) {
-            const primaryImage = product.images?.find(i => i.isPrimary) || product.images?.[0];
+        if (displayProduct) {
+            const primaryImage = displayProduct.images?.find(i => i.isPrimary) || displayProduct.images?.[0];
             setActiveImage(primaryImage);
             const initialSelections = {};
             Object.entries(variantOptions).forEach(([key, values]) => {
@@ -56,81 +60,94 @@ export default function ProductDetailPage() {
             setUserSelections(initialSelections);
             setSelectedVariant(null);
         }
-    }, [product, variantOptions]);
+    }, [displayProduct, variantOptions]);
 
     useEffect(() => {
-        if (!product) return;
+        if (!displayProduct) return;
         const optionKeys = Object.keys(variantOptions);
-        if (optionKeys.length === 0 && product.variants?.length > 0) {
-            setSelectedVariant(product.variants[0]);
+        if (optionKeys.length === 0 && displayProduct.variants?.length === 1) {
+            setSelectedVariant(displayProduct.variants[0]);
             return;
         }
         const allOptionsSelected = optionKeys.every(key => userSelections[key]);
         if (allOptionsSelected) {
-            const foundVariant = product.variants.find(variant =>
+            const foundVariant = displayProduct.variants.find(variant =>
                 optionKeys.every(key => variant.attributes[key] === userSelections[key])
             );
             setSelectedVariant(foundVariant || null);
         } else {
             setSelectedVariant(null);
         }
-    }, [userSelections, product, variantOptions]);
+    }, [userSelections, displayProduct, variantOptions]);
 
     const handleSelection = (key, value) => {
         setUserSelections(prev => ({ ...prev, [key]: value }));
     };
 
     const handleAddToCart = () => {
-        if (product && selectedVariant && quantity > 0) {
-            addItem(product, selectedVariant, quantity);
+        if (displayProduct && selectedVariant && quantity > 0) {
+            // CORRECTED: Localize the product name before sending it to the cart store.
+            const localizedProduct = {
+                ...displayProduct,
+                name: displayProduct.name[language] || displayProduct.name.en,
+            };
+            addItem(localizedProduct, selectedVariant, quantity);
         }
     };
 
     const getColorHex = (attributeKey, attributeValue) => {
-        if (!product || !product.variants) return null;
-        const variantWithColor = product.variants.find(v =>
+        if (!displayProduct || !displayProduct.variants) return null;
+        const variantWithColor = displayProduct.variants.find(v =>
             v.attributes && v.attributes[attributeKey] === attributeValue && v.attributes.colorHex
         );
         return variantWithColor?.attributes.colorHex;
     };
 
+    const formatPrice = (price) => {
+        if (price === undefined || price === null) return "N/A";
+        return new Intl.NumberFormat(language, { style: 'currency', currency }).format(price);
+    };
+
     if (productLoading) return <div className="flex items-center justify-center h-screen text-xl">Loading Product...</div>;
     if (error && !product) return <div className="flex items-center justify-center h-screen text-xl text-red-500">Error: {error}</div>;
-    if (!product) return <div className="flex items-center justify-center h-screen text-xl">Product not found.</div>;
+    if (!displayProduct) return <div className="flex items-center justify-center h-screen text-xl">Product not found.</div>;
+
+    const category = displayProduct.categories?.[0]?.category;
+    const categoryName = category?.name[language] || category?.name?.en || 'Category';
 
     return (
         <div className='bg-white min-h-screen'>
-            <DetailNavbar />
+            <HomeNavbar />
             <main className="py-10">
                 <div className="max-w-6xl mx-auto px-4">
-                    <p className="text-sm text-gray-500 mb-6"><Link to="/" className="hover:underline">Home</Link> / <Link to={`/shop/${product.categories?.[0]?.category.slug || 'all'}`} className="hover:underline">{product.categories?.[0]?.category.name || 'Category'}</Link> / {product.name}</p>
+                    {/* CORRECTED: Localize category name in breadcrumb */}
+                    <p className="text-sm text-gray-500 mb-6"><Link to="/" className="hover:underline">Home</Link> / <Link to={`/shop/${category?.slug || 'all'}`} className="hover:underline">{categoryName}</Link> / {displayProduct.name[language] || displayProduct.name.en}</p>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div className="flex flex-col-reverse sm:flex-row gap-4">
                             <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0">
-                                {product.images?.map(image => (
+                                {displayProduct.images?.map(image => (
                                     <div key={image.id} className={`w-20 h-20 rounded-md overflow-hidden cursor-pointer border-2 flex-shrink-0 ${activeImage?.id === image.id ? 'border-primary' : 'border-transparent'}`} onMouseEnter={() => setActiveImage(image)}>
                                         <img src={image.imageUrl} alt={image.altText || 'product thumbnail'} className="w-full h-full object-cover"/>
                                     </div>
                                 ))}
                             </div>
                             <div className="flex-grow bg-gray-100 rounded-lg overflow-hidden aspect-square">
-                                <img src={activeImage?.imageUrl} alt={product.name} className="w-full h-full object-cover"/>
+                                <img src={activeImage?.imageUrl} alt={displayProduct.name.en} className="w-full h-full object-cover"/>
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">{displayProduct.name[language] || displayProduct.name.en}</h1>
                             <div className="flex items-center gap-2 my-3">
                                 <div className="flex items-center">
                                     {Array.from({ length: 5 }).map((_, i) => (
-                                        <FiStar key={i} className={`w-5 h-5 ${i < Math.round(product.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                        <FiStar key={i} className={`w-5 h-5 ${i < Math.round(displayProduct.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
                                     ))}
                                 </div>
-                                <a href="#reviews" className="text-sm text-gray-500 hover:underline">({product.reviewCount || 0} Reviews)</a>
+                                <a href="#reviews" className="text-sm text-gray-500 hover:underline">({displayProduct.reviewCount || 0} Reviews)</a>
                             </div>
                             <div className="my-3 text-lg">
-                                <span className="font-bold text-primary text-2xl">${selectedVariant?.price ? parseFloat(selectedVariant.price).toFixed(2) : 'N/A'}</span>
+                                <span className="font-bold text-primary text-2xl">{formatPrice(selectedVariant?.price || displayProduct.variants[0]?.price)}</span>
                             </div>
-                            <p className="text-green-600 text-sm font-semibold mb-4">✔ In Stock</p>
                             <div className="space-y-4">
                                 {Object.entries(variantOptions).map(([key, values]) => (
                                     <div key={key}>
@@ -151,21 +168,21 @@ export default function ProductDetailPage() {
                                 <div className="flex items-center border border-gray-300 rounded-md"><button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 text-gray-600 hover:text-black"><FiMinus /></button><span className="px-5 font-semibold">{quantity}</span><button onClick={() => setQuantity(q => q + 1)} className="p-3 text-gray-600 hover:text-black"><FiPlus /></button></div>
                                 <button onClick={handleAddToCart} disabled={!selectedVariant || cartLoading} className="flex-grow bg-primary text-white py-3 rounded-md font-semibold hover:bg-fblack transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">{cartLoading ? 'Adding...' : (!selectedVariant ? 'Select Options' : 'Add to Cart')}</button>
                             </div>
-                            <div className="mt-8 border-t pt-6"><h4 className="font-semibold mb-2">Description</h4><p className="text-gray-600 leading-relaxed">{product.description}</p></div>
+                            <div className="mt-8 border-t pt-6"><h4 className="font-semibold mb-2">Description</h4><p className="text-gray-600 leading-relaxed">{displayProduct.description[language] || displayProduct.description.en}</p></div>
                         </div>
                     </div>
                 </div>
 
                 <div id="reviews" className="max-w-6xl mx-auto px-4 mt-20 pt-10 border-t">
                     <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-                    <ReviewStats averageRating={product.averageRating} reviewCount={product.reviewCount} />
+                    <ReviewStats averageRating={displayProduct.averageRating} reviewCount={displayProduct.reviewCount} />
                     <ReviewList productId={id} />
                 </div>
                 
                 <div className="max-w-6xl mx-auto px-4 mt-20">
                     <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">You may also like</h2><Link to="/shop" className="text-sm font-semibold text-primary hover:underline">View All</Link></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {relatedProducts.filter(p => p.id !== product.id).slice(0, 4).map(p => <ProductCard key={p.id} product={p} />)}
+                        {relatedProducts.filter(p => p.id !== displayProduct.id).slice(0, 4).map(p => <ProductCard key={p.id} product={p} />)}
                     </div>
                 </div>
             </main>
