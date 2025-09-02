@@ -7,7 +7,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useImageStore } from '../../store/imageStore';
 import {
     PiSpinnerGap, PiCube, PiX, PiPackage, PiCheckCircle,
-    PiArrowCounterClockwise, PiPaperPlaneRight, PiImage, PiChatText, PiUserCircle, PiLinkSimple, PiPaperclip
+    PiArrowCounterClockwise, PiPaperPlaneRight, PiImage, PiChatText, PiUserCircle, PiLinkSimple, PiPaperclip,
+    PiXCircle // <-- Restored Icon
 } from 'react-icons/pi';
 
 const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
@@ -210,7 +211,9 @@ export default function TrackOrderPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { isAuthenticated } = useAuthStore();
-    const { order, isLoading, fetchGuestOrder, clearCurrentOrder } = useOrderStore();
+    // highlight-start
+    const { order, isLoading, fetchGuestOrder, cancelOrder, clearCurrentOrder } = useOrderStore();
+    // highlight-end
     const [isReturnModalOpen, setReturnModalOpen] = useState(false);
     
     const orderIdFromUrl = searchParams.get('orderId');
@@ -232,7 +235,13 @@ export default function TrackOrderPage() {
         }
     }, [returnFocus, order]);
 
-    const handleCancel = async () => { /* ... */ };
+    // highlight-start
+    const handleCancel = async () => {
+        if (window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+            await cancelOrder(order.id, order.guest_token);
+        }
+    };
+    // highlight-end
 
     if (isLoading || (!order && tokenFromUrl)) {
         return <div className="flex h-screen items-center justify-center"><PiSpinnerGap className="animate-spin text-4xl text-gray-800" /></div>;
@@ -257,13 +266,24 @@ export default function TrackOrderPage() {
                         </div>
                         <div className="pt-4 mt-4 border-t text-right"><p className="text-lg font-bold text-gray-900">Total: {formatCurrency(order.totalAmount)}</p></div>
                     </div>
-                    {hasReturnRequest ? (<ReturnDetails returnRequest={order.returnRequests[0]} guestToken={order.guest_token} />) : (
-                        <div className="mt-8 text-center space-x-4">
+                    {/*// highlight-start*/}
+                    {hasReturnRequest ? (
+                        <ReturnDetails returnRequest={order.returnRequests[0]} guestToken={order.guest_token} />
+                    ) : (
+                        <div className="mt-8 flex justify-center items-center gap-4">
+                            {order.isCancellable && (
+                                <button onClick={handleCancel} className="px-6 py-3 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 flex items-center gap-2 text-sm">
+                                    <PiXCircle /> Cancel Order
+                                </button>
+                            )}
                             {order.isReturnable && (
-                                <button onClick={() => setReturnModalOpen(true)} className="px-6 py-3 bg-gray-800 text-white rounded-md font-semibold hover:bg-black flex items-center gap-2 justify-center mx-auto text-sm"><PiArrowCounterClockwise/> Request a Return</button>
+                                <button onClick={() => setReturnModalOpen(true)} className="px-6 py-3 bg-gray-800 text-white rounded-md font-semibold hover:bg-black flex items-center gap-2 text-sm">
+                                    <PiArrowCounterClockwise /> Request a Return
+                                </button>
                             )}
                         </div>
                     )}
+                    {/*// highlight-end*/}
                 </div>
             </div>
         );

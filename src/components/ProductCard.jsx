@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
-import { useSettings } from '../context/SettingsContext';
+import { useSettings } from '../context/SettingsContext'; // <-- SURGICAL ADDITION
 import { FiEye, FiHeart, FiShoppingCart, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import ProductCardSkeleton from './ProductCardSkeleton';
@@ -9,7 +9,7 @@ import ProductCardSkeleton from './ProductCardSkeleton';
 export default function ProductCard({ product, index = 0 }) {
     const navigate = useNavigate();
     const addItem = useCartStore((state) => state.addItem);
-    const { language, currency } = useSettings();
+    const { language, currency } = useSettings(); // <-- SURGICAL ADDITION
     const [selectedVariantId, setSelectedVariantId] = useState(null);
     const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -31,28 +31,38 @@ export default function ProductCard({ product, index = 0 }) {
         if (selectedVariantId) {
             const variantToAdd = product.variants.find(v => v.id === selectedVariantId);
             if (variantToAdd) {
-                addItem(product, variantToAdd, 1);
+                // --- SURGICAL MODIFICATION: Localize product before adding to cart ---
+                const localizedProduct = {
+                    ...product,
+                    name: product.name[language] || product.name.en
+                };
+                addItem(localizedProduct, variantToAdd, 1);
+                // --- END MODIFICATION ---
             }
         } else {
             toast.info("Please select a color from the bubbles first.");
         }
     };
-    
+
     const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
     const hoverImage = product.images?.find(img => img.order === 2) || primaryImage;
     const imageUrl = primaryImage?.imageUrl || "https://placehold.co/400x400/e2e8f0/cccccc?text=Img";
     const hoverImageUrl = hoverImage?.imageUrl || imageUrl;
 
     const firstVariant = product.variants?.[0];
-    const categoryName = product.category_names?.[0] || product.categories?.[0]?.name || "Uncategorized";
+    // --- SURGICAL MODIFICATION: Localize category name ---
+    const categoryName = product.categories?.[0]?.name[language] || product.categories?.[0]?.name?.en || "Uncategorized";
+    // --- END MODIFICATION ---
 
     const buttonText = !isSimpleColorVariantProduct ? "Select Options" : "Add to Cart";
     const isButtonDisabled = isSimpleColorVariantProduct && !selectedVariantId;
 
+    // --- SURGICAL ADDITION: Price formatting helper ---
     const formatPrice = (price) => {
         if (price === undefined || price === null) return "N/A";
         return new Intl.NumberFormat(language, { style: 'currency', currency }).format(price);
     };
+    // --- END ADDITION ---
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group/card relative transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 transform-gpu" style={{ animationDelay: `${index * 150}ms` }}>
@@ -60,22 +70,44 @@ export default function ProductCard({ product, index = 0 }) {
                 <div className="relative h-64 overflow-hidden bg-gray-50">
                     <img src={imageUrl} alt={product.name} className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out transform-gpu ${isImageLoaded ? "scale-100 opacity-100" : "scale-110 opacity-0"} group-hover/card:scale-110 group-hover/card:opacity-0`} onLoad={() => setIsImageLoaded(true)} />
                     <img src={hoverImageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out opacity-0 scale-95 group-hover/card:scale-105 group-hover/card:opacity-100 transform-gpu" />
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute top-4 -right-16 flex flex-col gap-3 transition-all duration-500 ease-out group-hover/card:right-4">
+                        <button onClick={(e) => { e.preventDefault(); toast.info("Added to Wishlist!"); }} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-pink-500 hover:text-white transition-all duration-300 shadow-lg hover:shadow-pink-500/25 hover:scale-110 transform-gpu"><FiHeart size={16} /></button>
+                        <button onClick={(e) => { e.preventDefault(); toast.info("Quick view coming soon!"); }} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg hover:shadow-primary/25 hover:scale-110 transform-gpu"><FiEye size={16} /></button>
+                    </div>
+                    {isSimpleColorVariantProduct && (
+                        <div className="absolute bottom-4 left-4 flex gap-2 opacity-0 translate-y-8 group-hover/card:opacity-100 group-hover/card:translate-y-0 transition-all duration-500 ease-out">
+                            {product.variants.map((variant, idx) => (
+                                <button key={variant.id} title={variant.attributes.Color || 'Variant'} className={`w-7 h-7 rounded-full border-2 shadow-lg cursor-pointer transition-all duration-300 hover:scale-125 transform-gpu ${selectedVariantId === variant.id ? "ring-2 ring-offset-2 ring-primary border-white" : "border-white/60"}`} style={{ backgroundColor: variant.attributes.colorHex, animationDelay: `${idx * 100}ms` }} onClick={(e) =>{ e.preventDefault(); e.stopPropagation(); setSelectedVariantId(variant.id); }} />
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div className="p-5 space-y-3">
-                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{categoryName}</p>
-                    <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-relaxed group-hover/card:text-primary transition-colors duration-300" title={product.name}>{product.name}</h3>
                     <div className="flex items-center justify-between">
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{categoryName}</p>
+                        <div className="flex items-center gap-1 text-yellow-400">
+                            <FiStar size={12} className="fill-current" />
+                            <span className="text-xs text-slate-600">{product.averageRating ? product.averageRating.toFixed(1) : 'N/A'}</span>
+                        </div>
+                    </div>
+                    {/* --- SURGICAL MODIFICATION: Render localized name --- */}
+                    <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-relaxed group-hover/card:text-primary transition-colors duration-300" title={product.name[language] || product.name.en}>{product.name[language] || product.name.en}</h3>
+                    {/* --- END MODIFICATION --- */}
+                    <div className="flex items-center justify-between">
+                        {/* --- SURGICAL MODIFICATION: Use formatPrice helper --- */}
                         <p className="text-lg font-bold text-primary">{formatPrice(firstVariant?.price)}</p>
-                        {isSimpleColorVariantProduct && (
-                            <div className="flex gap-2">
-                                {product.variants.slice(0, 4).map((variant) => (
-                                    <button key={variant.id} title={variant.attributes.Color || 'Variant'} className={`w-5 h-5 rounded-full border shadow-sm cursor-pointer transition-all duration-300 ${selectedVariantId === variant.id ? "ring-2 ring-offset-1 ring-primary border-white" : "border-white/60"}`} style={{ backgroundColor: variant.attributes.colorHex }} onClick={(e) =>{ e.preventDefault(); e.stopPropagation(); setSelectedVariantId(variant.id); }} />
-                                ))}
-                            </div>
-                        )}
+                        {/* --- END MODIFICATION --- */}
+                        <span className="text-xs text-slate-400 line-through">$99.99</span>
                     </div>
                 </div>
             </Link>
+            <div className="absolute bottom-0 left-0 right-0 transition-all duration-500 ease-out transform translate-y-full group-hover/card:translate-y-0">
+                <button onClick={handleAddToCart} disabled={isButtonDisabled} className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 backdrop-blur-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <FiShoppingCart size={16} className="transition-transform duration-300 group-hover/card:scale-110" />
+                    {buttonText}
+                </button>
+            </div>
         </div>
     );
 }

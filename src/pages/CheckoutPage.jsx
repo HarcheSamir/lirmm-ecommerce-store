@@ -36,7 +36,7 @@ const OrderSummaryItem = ({ item, formatPrice }) => (
 
 export default function CheckoutPage() {
     const navigate = useNavigate();
-    const { cart } = useCartStore();
+    const { cart, clearCart } = useCartStore();
     const { createOrder, isLoading } = useOrderStore();
     const { isAuthenticated, user } = useAuthStore();
     const { language, currency } = useSettings();
@@ -85,9 +85,22 @@ export default function CheckoutPage() {
             items: cart.items,
         };
         const result = await createOrder(orderData);
-        if (result.success) {
-            navigate(`/order-confirmation/${result.order.id}`);
+        
+        // highlight-start
+        if (result && result.success && result.order?.id && result.order?.guest_token) {
+            toast.success("Order placed successfully! Redirecting...");
+            
+            // Navigate first
+            navigate(`/track-order?orderId=${result.order.id}&token=${result.order.guest_token}`);
+            
+            // Then schedule the cart clearing to happen after the navigation starts
+            setTimeout(() => {
+                clearCart();
+            }, 0);
+        } else {
+            toast.error("There was an issue placing your order. Please try again.");
         }
+        // highlight-end
     };
 
     if (!cart || cart.items.length === 0) {
