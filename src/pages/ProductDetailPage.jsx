@@ -86,7 +86,6 @@ export default function ProductDetailPage() {
 
     const handleAddToCart = () => {
         if (displayProduct && selectedVariant && quantity > 0) {
-            // CORRECTED: Localize the product name before sending it to the cart store.
             const localizedProduct = {
                 ...displayProduct,
                 name: displayProduct.name[language] || displayProduct.name.en,
@@ -120,7 +119,6 @@ export default function ProductDetailPage() {
             <HomeNavbar />
             <main className="py-10">
                 <div className="max-w-6xl mx-auto px-4">
-                    {/* CORRECTED: Localize category name in breadcrumb */}
                     <p className="text-sm text-gray-500 mb-6"><Link to="/" className="hover:underline">Home</Link> / <Link to={`/shop/${category?.slug || 'all'}`} className="hover:underline">{categoryName}</Link> / {displayProduct.name[language] || displayProduct.name.en}</p>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div className="flex flex-col-reverse sm:flex-row gap-4">
@@ -147,6 +145,11 @@ export default function ProductDetailPage() {
                             </div>
                             <div className="my-3 text-lg">
                                 <span className="font-bold text-primary text-2xl">{formatPrice(selectedVariant?.price || displayProduct.variants[0]?.price)}</span>
+                                {/* --- START: SURGICAL MODIFICATION --- */}
+                                {selectedVariant?.stockQuantity === 0 && (
+                                    <span className="ml-4 text-sm font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full">Out of Stock</span>
+                                )}
+                                {/* --- END: SURGICAL MODIFICATION --- */}
                             </div>
                             <div className="space-y-4">
                                 {Object.entries(variantOptions).map(([key, values]) => (
@@ -164,10 +167,22 @@ export default function ProductDetailPage() {
                                     </div>
                                 ))}
                             </div>
+                            {/* --- START: SURGICAL MODIFICATION --- */}
                             <div className="flex items-center gap-4 mt-6">
-                                <div className="flex items-center border border-gray-300 rounded-md"><button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 text-gray-600 hover:text-black"><FiMinus /></button><span className="px-5 font-semibold">{quantity}</span><button onClick={() => setQuantity(q => q + 1)} className="p-3 text-gray-600 hover:text-black"><FiPlus /></button></div>
-                                <button onClick={handleAddToCart} disabled={!selectedVariant || cartLoading} className="flex-grow bg-primary text-white py-3 rounded-md font-semibold hover:bg-fblack transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">{cartLoading ? 'Adding...' : (!selectedVariant ? 'Select Options' : 'Add to Cart')}</button>
+                                <div className={`flex items-center border rounded-md ${selectedVariant?.stockQuantity === 0 ? 'bg-gray-100' : 'border-gray-300'}`}>
+                                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 text-gray-600 hover:text-black disabled:cursor-not-allowed disabled:text-gray-300" disabled={selectedVariant?.stockQuantity === 0}><FiMinus /></button>
+                                    <span className={`px-5 font-semibold ${selectedVariant?.stockQuantity === 0 ? 'text-gray-400' : ''}`}>{quantity}</span>
+                                    <button onClick={() => setQuantity(q => q + 1)} className="p-3 text-gray-600 hover:text-black disabled:cursor-not-allowed disabled:text-gray-300" disabled={selectedVariant?.stockQuantity === 0}><FiPlus /></button>
+                                </div>
+                                <button
+                                    onClick={handleAddToCart}
+                                    disabled={!selectedVariant || cartLoading || selectedVariant.stockQuantity === 0}
+                                    className="flex-grow bg-primary text-white py-3 rounded-md font-semibold hover:bg-fblack transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    {cartLoading ? 'Adding...' : (!selectedVariant ? 'Select Options' : (selectedVariant.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'))}
+                                </button>
                             </div>
+                            {/* --- END: SURGICAL MODIFICATION --- */}
                             <div className="mt-8 border-t pt-6"><h4 className="font-semibold mb-2">Description</h4><p className="text-gray-600 leading-relaxed">{displayProduct.description[language] || displayProduct.description.en}</p></div>
                         </div>
                     </div>
